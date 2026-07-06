@@ -19,7 +19,7 @@ export const DEFAULTS = {
   legalInspectionCost: 1_500, // flat, one-time closing cost
   marginalTaxRate: 30, // % — only used in 'taxable' tax mode
   taxMode: "tfsa", // 'tfsa' | 'taxable'
-  isFirstTimeBuyer: false,
+  isFirstTimeBuyer: true,
 };
 
 // Misc monthly living expenses — informational only, kept separate from the

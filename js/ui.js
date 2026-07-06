@@ -43,6 +43,10 @@ export function initUI() {
 
   document.getElementById("chart-scrubber").addEventListener("input", renderChartDisplay);
 
+  const firstTimeBuyerInput = document.getElementById("firstTimeBuyer");
+  firstTimeBuyerInput.checked = DEFAULTS.isFirstTimeBuyer;
+  isFirstTimeBuyer = firstTimeBuyerInput.checked;
+
   updateMarginalTaxVisibility();
   recompute();
 }
@@ -213,9 +217,9 @@ function renderMonthlyCard(result) {
   const body = document.querySelector("#card-monthly .breakdown-body");
   const b = result.monthlyBreakdown;
   body.innerHTML = `
-    <div class="row"><span>P&amp;I</span><span>${formatMoney(b.pi)}</span></div>
-    <div class="row"><span>Principal</span><span>${formatMoney(b.principal)}</span></div>
-    <div class="row"><span>Interest</span><span>${formatMoney(b.interest)}</span></div>
+    <div class="row row-subtotal"><span>Mortgage payment (P&amp;I)</span><span>${formatMoney(b.pi)}</span></div>
+    <div class="row row-indent"><span>• Principal</span><span>${formatMoney(b.principal)}</span></div>
+    <div class="row row-indent"><span>• Interest</span><span>${formatMoney(b.interest)}</span></div>
     <div class="row"><span>Property tax</span><span>${formatMoney(b.tax)}</span></div>
     <div class="row"><span>Heating</span><span>${formatMoney(b.heat)}</span></div>
     <div class="row"><span>Insurance</span><span>${formatMoney(b.insurance)}</span></div>

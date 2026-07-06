@@ -303,6 +303,19 @@ input[type="number"]::-webkit-inner-spin-button {
   gap: 8px;
 }
 
+.breakdown-body .row-subtotal {
+  font-weight: 700;
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
+.breakdown-body .row-indent {
+  padding-left: 14px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
 .badge {
   display: inline-block;
   padding: 2px 8px;
