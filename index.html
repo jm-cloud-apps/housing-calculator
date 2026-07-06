@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>🏠 Buy vs Rent+Invest — Vancouver</title>
+  <meta name="description" content="Compare buying a home in Vancouver, BC vs renting and investing the difference in VFV (S&P 500)." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <h1>🏠 Buy <span class="vs">vs</span> 📈 Rent + Invest</h1>
+    <p class="subtitle">A Vancouver, BC mortgage vs. VFV (S&amp;P 500) calculator</p>
+  </header>
+
+  <main>
+    <section id="primary-inputs" class="card">
+      <div id="primary-fields" class="fields"></div>
+    </section>
+
+    <section id="results" class="card results-card">
+      <h2 id="headline">—</h2>
+      <p id="headline-sub" class="headline-sub"></p>
+
+      <div class="chart-wrap">
+        <canvas id="net-worth-chart"></canvas>
+      </div>
+      <div id="chart-legend" class="legend">
+        <span class="legend-item"><span class="dot dot-buy"></span>Buy</span>
+        <span class="legend-item"><span class="dot dot-rent"></span>Rent + Invest</span>
+      </div>
+
+      <div class="breakdown-grid">
+        <div class="breakdown-card" id="card-cmhc">
+          <h3>CMHC Insurance</h3>
+          <div class="breakdown-body"></div>
+        </div>
+        <div class="breakdown-card" id="card-ptt">
+          <h3>BC Property Transfer Tax</h3>
+          <div class="breakdown-body"></div>
+        </div>
+        <div class="breakdown-card" id="card-monthly">
+          <h3>Monthly Cost (Owning)</h3>
+          <div class="breakdown-body"></div>
+        </div>
+        <div class="breakdown-card" id="card-gds">
+          <h3>GDS Affordability</h3>
+          <div class="breakdown-body"></div>
+        </div>
+      </div>
+    </section>
+
+    <details id="advanced" class="card">
+      <summary>⚙️ Advanced assumptions</summary>
+
+      <div class="tax-toggle" id="tax-toggle">
+        <button type="button" data-tax-mode="tfsa" class="seg-btn active">Tax-Free (TFSA)</button>
+        <button type="button" data-tax-mode="taxable" class="seg-btn">Taxable</button>
+      </div>
+
+      <div id="advanced-fields" class="fields"></div>
+    </details>
+  </main>
+
+  <footer class="app-footer">
+    <p>
+      Illustrative estimate only — not financial advice. The mortgage rate shown is a manually
+      chosen example, not a live/current rate. Verify all figures with a mortgage professional
+      or accountant before making a decision.
+    </p>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

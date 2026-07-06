@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Editor / tooling
+.vscode/
+.idea/
+.claude/
+
+# Node (only if you ever add tooling)
+node_modules/
