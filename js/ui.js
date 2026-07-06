@@ -138,10 +138,12 @@ function renderChartDisplay() {
   const owner = lastResult.ownerNetWorth[markerYear];
   const renter = lastResult.renterNetWorth[markerYear];
   const ahead = owner >= renter ? "Buy" : "Rent + Invest";
+  const flow = lastResult.renterMonthlyFlow;
   document.getElementById("chart-readout").innerHTML =
     `Year ${markerYear}: Buy ${formatMoney(owner, { compact: true })} · ` +
     `Rent + Invest ${formatMoney(renter, { compact: true })} — <strong>${ahead}</strong> ahead by ` +
-    `${formatMoney(Math.abs(owner - renter), { compact: true })}`;
+    `${formatMoney(Math.abs(owner - renter), { compact: true })}` +
+    `<div class="chart-readout-sub">Year 1 renter flow: rent ${formatMoney(flow.monthlyRent)}/mo + invest ${formatMoney(flow.monthlyInvestmentContribution)}/mo</div>`;
 
   const beEl = document.getElementById("breakeven-note");
   if (lastResult.breakeven) {

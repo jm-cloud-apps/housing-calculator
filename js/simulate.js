@@ -97,6 +97,10 @@ export function runSimulation(inputs) {
     grossAnnualIncome: grossIncome,
   });
 
+  const firstYearOwnerCost = monthlyBreakdown.pi * 12 + monthlyBreakdown.tax * 12 + monthlyBreakdown.heat * 12 + monthlyBreakdown.insurance * 12 + monthlyBreakdown.maintenance * 12 + monthlyBreakdown.condo * 12;
+  const firstYearRent = monthlyRent * 12;
+  const firstYearInvestmentContribution = Math.max(0, firstYearOwnerCost - firstYearRent);
+
   const years = [0];
   const ownerNetWorth = [homePrice - (homePrice * sellingCostRate) / 100 - loanPrincipal];
 
@@ -156,6 +160,11 @@ export function runSimulation(inputs) {
     legalInspectionCost,
     monthlyBreakdown,
     gds,
+    renterMonthlyFlow: {
+      monthlyRent,
+      monthlyInvestmentContribution: firstYearInvestmentContribution / 12,
+      monthlyTotal: monthlyRent + firstYearInvestmentContribution / 12,
+    },
     amortizationCaveat: cmhc.status === "insured" && amortizationYears > CMHC_STANDARD_MAX_AMORT_YEARS,
   };
 }
