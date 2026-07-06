@@ -103,11 +103,12 @@ export function firstTimeBuyerPttExemption(price, rawTax) {
 }
 
 // GDS = (monthly P&I + monthly property tax + monthly heating + 50% monthly condo fee)
-// x 12 / gross annual income. Returns null when income is 0/blank (check not applicable).
+// x 12 / gross annual income. Returns { ratio, monthlyCost } so callers can show both the
+// percentage and the dollars behind it; returns null when income is 0/blank (N/A).
 export function gdsRatio({ monthlyPI, monthlyPropertyTax, monthlyHeating, monthlyCondoFee, grossAnnualIncome }) {
   if (!grossAnnualIncome) return null;
-  const monthlyGds = monthlyPI + monthlyPropertyTax + monthlyHeating + 0.5 * monthlyCondoFee;
-  return (monthlyGds * 12) / grossAnnualIncome;
+  const monthlyCost = monthlyPI + monthlyPropertyTax + monthlyHeating + 0.5 * monthlyCondoFee;
+  return { ratio: (monthlyCost * 12) / grossAnnualIncome, monthlyCost };
 }
 
 // Applies capital-gains tax (taxable mode only) to unrealized gains, at the 50% inclusion rate.

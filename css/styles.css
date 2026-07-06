@@ -411,6 +411,93 @@ input[type="text"]::-webkit-inner-spin-button {
   font-size: 0.88rem;
 }
 
+/* Prominent, unmistakable subtotal/total line inside a breakdown card. */
+.breakdown-body .row-total {
+  font-weight: 800;
+  font-size: 1rem;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-top: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+
+.breakdown-body .pos {
+  color: var(--good);
+  font-weight: 600;
+}
+
+.breakdown-body .neg {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+/* Own-vs-rent comparison block at the foot of the Monthly Cost card. */
+.compare-block {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.subhead {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.compare-verdict {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.compare-verdict.compare-own-more {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.compare-verdict.compare-own-less {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+/* GDS affordability verdict header. */
+.gds-verdict {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.gds-pct {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.gds-verdict.verdict-good .gds-pct {
+  color: var(--good);
+}
+
+.gds-verdict.verdict-warn .gds-pct {
+  color: var(--warn);
+}
+
+.gds-verdict.verdict-bad .gds-pct {
+  color: var(--bad);
+}
+
+.gds-explain {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
 .badge {
   display: inline-block;
   padding: 2px 8px;

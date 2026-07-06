@@ -89,7 +89,7 @@ export function runSimulation(inputs) {
     monthlyBreakdown.maintenance +
     monthlyBreakdown.condo;
 
-  const gds = gdsRatio({
+  const gdsResult = gdsRatio({
     monthlyPI: monthlyBreakdown.pi,
     monthlyPropertyTax: monthlyBreakdown.tax,
     monthlyHeating: monthlyBreakdown.heat,
@@ -191,7 +191,9 @@ export function runSimulation(inputs) {
     downPayment,
     legalInspectionCost,
     monthlyBreakdown,
-    gds,
+    gds: gdsResult ? gdsResult.ratio : null,
+    gdsMonthlyCost: gdsResult ? gdsResult.monthlyCost : null,
+    grossIncome,
     yearlyCashFlow,
     amortizationSchedule,
     renterMonthlyFlow: {

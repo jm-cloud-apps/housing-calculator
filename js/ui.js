@@ -120,7 +120,7 @@ function recompute() {
   renderCashCard(result);
   renderMonthlyCard(result);
   renderGdsCard(result);
-  renderMiscTotal();
+  renderMiscTotal(result);
   renderYearlyCashFlow(result);
   renderAmortizationSchedule(result);
 }
@@ -275,47 +275,85 @@ function renderCashCard(result) {
 function renderMonthlyCard(result) {
   const body = document.querySelector("#card-monthly .breakdown-body");
   const b = result.monthlyBreakdown;
-  const miscTotal = MISC_FIELDS.reduce((sum, { key }) => sum + fields[key].get(), 0);
-  const grandTotal = b.total + miscTotal;
-  const miscRows = MISC_FIELDS.map(({ key, label }) => {
-    const value = fields[key].get();
-    return `<div class="row row-indent"><span>• ${label}</span><span>${formatMoney(value)}</span></div>`;
-  }).join("");
+  const rent = result.renterMonthlyFlow.monthlyRent;
+  const housing = b.total;
+  const diff = housing - rent; // + = owning costs more than renting
+  const ownsMore = diff >= 0;
+  const principalNote = b.principal > 0
+    ? `<p class="note">About ${formatMoney(b.principal)}/mo of the owning cost is principal — forced savings that builds your equity, not money spent.</p>`
+    : "";
+
   body.innerHTML = `
-    <div class="row row-subtotal"><span>Mortgage payment (P&amp;I)</span><span>${formatMoney(b.pi)}</span></div>
-    <div class="row row-indent"><span>• Principal</span><span>${formatMoney(b.principal)}</span></div>
+    <div class="row"><span>Mortgage payment (P&amp;I)</span><span>${formatMoney(b.pi)}</span></div>
+    <div class="row row-indent"><span>• Principal (builds equity)</span><span>${formatMoney(b.principal)}</span></div>
     <div class="row row-indent"><span>• Interest</span><span>${formatMoney(b.interest)}</span></div>
     <div class="row"><span>Property tax</span><span>${formatMoney(b.tax)}</span></div>
     <div class="row"><span>Heating</span><span>${formatMoney(b.heat)}</span></div>
-    <div class="row"><span>Insurance</span><span>${formatMoney(b.insurance)}</span></div>
+    <div class="row"><span>Home insurance</span><span>${formatMoney(b.insurance)}</span></div>
     <div class="row"><span>Maintenance</span><span>${formatMoney(b.maintenance)}</span></div>
     <div class="row"><span>Condo/strata</span><span>${formatMoney(b.condo)}</span></div>
-    <div class="row row-subtotal"><span>Other monthly expenses</span><span>${formatMoney(miscTotal)}</span></div>
-    ${miscRows}
-    <div class="row"><strong>Estimated total monthly cost</strong><strong>${formatMoney(grandTotal)}</strong></div>
+    <div class="row row-total"><span>Total monthly housing cost</span><span>${formatMoney(housing)}</span></div>
+
+    <div class="compare-block">
+      <p class="subhead">Owning vs. renting — per month</p>
+      <div class="row"><span>Own (all-in housing)</span><span>${formatMoney(housing)}</span></div>
+      <div class="row"><span>Rent (comparable)</span><span>${formatMoney(rent)}</span></div>
+      <div class="compare-verdict ${ownsMore ? "compare-own-more" : "compare-own-less"}">
+        Owning costs <strong>${formatMoney(Math.abs(diff))}/mo ${ownsMore ? "more" : "less"}</strong> than renting
+      </div>
+      ${principalNote}
+    </div>
   `;
 }
 
 function renderGdsCard(result) {
   const body = document.querySelector("#card-gds .breakdown-body");
   if (result.gds == null) {
-    body.innerHTML = `<p class="note">Enter a gross household income above to check affordability.</p>`;
+    body.innerHTML = `<p class="note">Add your gross household income under ⚙️ Assumptions to see whether a lender would approve this — and how much room you'd have.</p>`;
     return;
   }
-  const pct = result.gds * 100;
-  let badgeClass = "badge-good";
-  if (result.gds > GDS_MAX_RATIO + 0.03) badgeClass = "badge-bad";
-  else if (result.gds > GDS_MAX_RATIO) badgeClass = "badge-warn";
+  const ratio = result.gds;
+  const pct = ratio * 100;
+  const capPct = GDS_MAX_RATIO * 100;
+  const grossMonthly = result.grossIncome / 12;
+  const gdsMonthly = result.gdsMonthlyCost;
+  const capMonthly = GDS_MAX_RATIO * grossMonthly;
+  const headroom = capMonthly - gdsMonthly; // + = room to spare, - = over the cap
+
+  let verdictClass, badgeClass, verdictText;
+  if (ratio > GDS_MAX_RATIO + 0.03) {
+    verdictClass = "verdict-bad"; badgeClass = "badge-bad"; verdictText = "Over the lender limit";
+  } else if (ratio > GDS_MAX_RATIO) {
+    verdictClass = "verdict-warn"; badgeClass = "badge-warn"; verdictText = "Slightly over the cap";
+  } else {
+    verdictClass = "verdict-good"; badgeClass = "badge-good"; verdictText = "Within lender limits";
+  }
+
+  const headroomRow = headroom >= 0
+    ? `<div class="row"><span>Room before the cap</span><span class="pos">+${formatMoney(headroom)}/mo</span></div>`
+    : `<div class="row"><span>Over the cap by</span><span class="neg">${formatMoney(Math.abs(headroom))}/mo</span></div>`;
+
   body.innerHTML = `
-    <div class="row"><span>GDS ratio</span><span class="badge ${badgeClass}">${formatPercent(pct)}</span></div>
-    <div class="row"><span>Max allowed</span><span>${formatPercent(GDS_MAX_RATIO * 100, 0)}</span></div>
+    <div class="gds-verdict ${verdictClass}">
+      <span class="badge ${badgeClass}">${verdictText}</span>
+      <span class="gds-pct">${formatPercent(pct)}</span>
+    </div>
+    <p class="gds-explain"><strong>${formatPercent(pct)}</strong> of your gross (pre-tax) income would go to core housing costs. Lenders cap this at <strong>${formatPercent(capPct, 0)}</strong> when sizing your mortgage.</p>
+    <div class="row"><span>Housing counted (GDS)</span><span>${formatMoney(gdsMonthly)}/mo</span></div>
+    <div class="row"><span>Gross income</span><span>${formatMoney(grossMonthly)}/mo</span></div>
+    ${headroomRow}
+    <p class="note">GDS counts mortgage P&amp;I + property tax + heating + 50% of condo fees (not insurance or maintenance). Above ${formatPercent(capPct, 0)}, many lenders won't approve without a bigger down payment or co-signer.</p>
   `;
 }
 
-function renderMiscTotal() {
-  const total = MISC_FIELDS.reduce((sum, { key }) => sum + fields[key].get(), 0);
-  document.getElementById("misc-total").innerHTML =
-    `<div class="row"><strong>Total other expenses</strong><strong>${formatMoney(total)}/mo</strong></div>`;
+function renderMiscTotal(result) {
+  const other = MISC_FIELDS.reduce((sum, { key }) => sum + fields[key].get(), 0);
+  const housing = result?.monthlyBreakdown?.total ?? 0;
+  document.getElementById("misc-total").innerHTML = `
+    <div class="row"><span>Housing (owning)</span><span>${formatMoney(housing)}/mo</span></div>
+    <div class="row"><span>Other expenses</span><span>${formatMoney(other)}/mo</span></div>
+    <div class="row row-total"><span>Total monthly outlay</span><span>${formatMoney(housing + other)}/mo</span></div>
+  `;
 }
 
 function renderYearlyCashFlow(result) {
