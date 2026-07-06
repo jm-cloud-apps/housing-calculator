@@ -164,7 +164,7 @@ input[type="range"]::-moz-range-thumb {
   font-size: 0.85rem;
 }
 
-input[type="number"] {
+input[type="text"] {
   width: 96px;
   min-height: 44px;
   border: 1px solid var(--line);
@@ -177,8 +177,8 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
+input[type="text"]::-webkit-outer-spin-button,
+input[type="text"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }

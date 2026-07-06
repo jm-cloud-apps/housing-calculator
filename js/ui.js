@@ -69,7 +69,7 @@ function renderAndBind(container, meta, defaultsSource = DEFAULTS, rangesSource 
       <input type="range" id="${key}-slider" min="${range.min}" max="${range.max}" step="${range.step}" value="${def}" />
       <div class="number-wrap">
         ${prefix ? `<span class="unit">${prefix}</span>` : ""}
-        <input type="number" id="${key}-value" inputmode="decimal" step="${range.step}" value="${def}" />
+        <input type="text" id="${key}-value" inputmode="decimal" step="${range.step}" value="${def}" />
         ${suffix ? `<span class="unit">${suffix}</span>` : ""}
       </div>
     </div>

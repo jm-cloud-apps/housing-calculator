@@ -8,9 +8,19 @@ export function bindSliderField(id, { min, max, step, value, onChange }) {
   const number = document.getElementById(`${id}-value`);
 
   const clamp = (v) => (Number.isNaN(v) ? current : Math.min(max, Math.max(min, v)));
+  const decimals = (String(step).split(".")[1] || "").length;
   const formatForStep = (v) => {
-    const decimals = (String(step).split(".")[1] || "").length;
-    return Number(v.toFixed(decimals));
+    const rounded = Number(Number(v).toFixed(decimals));
+    return new Intl.NumberFormat("en-CA", {
+      maximumFractionDigits: decimals,
+      minimumFractionDigits: decimals > 0 ? decimals : 0,
+    }).format(rounded);
+  };
+  const parseNumericValue = (raw) => {
+    const cleaned = String(raw ?? "").replace(/,/g, "").trim();
+    if (!cleaned) return Number.NaN;
+    const parsed = Number(cleaned);
+    return Number.isFinite(parsed) ? parsed : Number.NaN;
   };
 
   let current = clamp(Number(value));
@@ -21,7 +31,7 @@ export function bindSliderField(id, { min, max, step, value, onChange }) {
   }
 
   function set(v) {
-    current = clamp(Number(v));
+    current = clamp(parseNumericValue(v));
     applyToDom(current);
     onChange(current);
     return current;
@@ -37,15 +47,31 @@ export function bindSliderField(id, { min, max, step, value, onChange }) {
   // "1" while they're still typing "12.5"). Only reformat it on blur/change; the slider
   // still tracks live so the two stay visually in sync as they type.
   number.addEventListener("input", () => {
-    const raw = Number(number.value);
+    const raw = parseNumericValue(number.value);
     if (Number.isNaN(raw)) return;
     current = clamp(raw);
     slider.value = current;
     onChange(current);
   });
 
-  number.addEventListener("blur", () => applyToDom(current));
-  number.addEventListener("change", () => applyToDom(current));
+  number.addEventListener("blur", () => {
+    const raw = parseNumericValue(number.value);
+    if (Number.isNaN(raw)) {
+      applyToDom(current);
+      return;
+    }
+    current = clamp(raw);
+    applyToDom(current);
+  });
+  number.addEventListener("change", () => {
+    const raw = parseNumericValue(number.value);
+    if (Number.isNaN(raw)) {
+      applyToDom(current);
+      return;
+    }
+    current = clamp(raw);
+    applyToDom(current);
+  });
 
   applyToDom(current);
 
