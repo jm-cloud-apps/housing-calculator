@@ -10,9 +10,9 @@ export const DEFAULTS = {
   horizonYears: 25,
   rentGrowth: 3, // %/yr
   homeAppreciation: 1, // %/yr
-  propertyTaxRate: 0.3, // %/yr of current home value
+  propertyTaxRate: 200, // fixed monthly property tax cost
   homeInsuranceMonthly: 100,
-  maintenanceRate: 1, // %/yr of current home value (excluded from GDS)
+  maintenanceRate: 450, // fixed monthly maintenance cost (excluded from GDS)
   heatingMonthly: 50,
   condoFeeMonthly: 400,
   sellingCostRate: 4, // % of future home value, paid on exit
@@ -60,9 +60,9 @@ export const RANGES = {
   horizonYears: { min: 1, max: 30, step: 1 },
   rentGrowth: { min: 0, max: 10, step: 0.1 },
   homeAppreciation: { min: -5, max: 10, step: 0.1 },
-  propertyTaxRate: { min: 0, max: 2, step: 0.01 },
+  propertyTaxRate: { min: 0, max: 5_000, step: 10 },
   homeInsuranceMonthly: { min: 0, max: 1_000, step: 10 },
-  maintenanceRate: { min: 0, max: 5, step: 0.1 },
+  maintenanceRate: { min: 0, max: 5_000, step: 10 },
   heatingMonthly: { min: 0, max: 1_000, step: 10 },
   condoFeeMonthly: { min: 0, max: 2_000, step: 25 },
   sellingCostRate: { min: 0, max: 10, step: 0.1 },
@@ -85,9 +85,9 @@ export const ADVANCED_FIELDS = [
   { key: "investReturn", label: "Investment return (VFV/S&P 500)", suffix: "%/yr" },
   { key: "rentGrowth", label: "Rent growth", suffix: "%/yr" },
   { key: "homeAppreciation", label: "Home appreciation", suffix: "%/yr" },
-  { key: "propertyTaxRate", label: "Property tax rate", suffix: "%/yr" },
+  { key: "propertyTaxRate", label: "Property tax", prefix: "$", suffix: "/mo" },
   { key: "homeInsuranceMonthly", label: "Home insurance", prefix: "$", suffix: "/mo" },
-  { key: "maintenanceRate", label: "Maintenance", suffix: "%/yr" },
+  { key: "maintenanceRate", label: "Maintenance", prefix: "$", suffix: "/mo" },
   { key: "heatingMonthly", label: "Heating", prefix: "$", suffix: "/mo" },
   { key: "condoFeeMonthly", label: "Condo/strata fee", prefix: "$", suffix: "/mo" },
   { key: "sellingCostRate", label: "Selling costs on exit", suffix: "%" },

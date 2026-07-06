@@ -69,10 +69,10 @@ export function runSimulation(inputs) {
   // Day-1 monthly breakdown, used for both the GDS check and the UI's cost card.
   const monthlyBreakdown = {
     pi: pmt,
-    tax: (homePrice * propertyTaxRate) / 100 / 12,
+    tax: propertyTaxRate,
     heat: heatingMonthly,
     insurance: homeInsuranceMonthly,
-    maintenance: (homePrice * maintenanceRate) / 100 / 12,
+    maintenance: maintenanceRate,
     condo: condoFeeMonthly,
   };
   monthlyBreakdown.total =
@@ -104,10 +104,10 @@ export function runSimulation(inputs) {
     const balance = remainingBalance(loanPrincipal, mortgageRate, amortizationYears, monthsElapsed);
 
     const annualPI = year <= amortizationYears ? pmt * 12 : 0;
-    const annualTax = (homeValue * propertyTaxRate) / 100;
+    const annualTax = propertyTaxRate * 12;
     const annualHeat = heatingMonthly * 12;
     const annualInsurance = homeInsuranceMonthly * 12;
-    const annualMaint = (homeValue * maintenanceRate) / 100;
+    const annualMaint = maintenanceRate * 12;
     const annualCondo = condoFeeMonthly * 12;
     const ownerCashCost = annualPI + annualTax + annualHeat + annualInsurance + annualMaint + annualCondo;
 
