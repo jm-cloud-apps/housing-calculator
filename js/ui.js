@@ -42,6 +42,7 @@ export function initUI() {
   });
 
   document.getElementById("chart-scrubber").addEventListener("input", renderChartDisplay);
+  document.getElementById("sensitivity-select").addEventListener("change", (e) => applyPreset(e.target.value));
 
   const firstTimeBuyerInput = document.getElementById("firstTimeBuyer");
   firstTimeBuyerInput.checked = DEFAULTS.isFirstTimeBuyer;
@@ -120,6 +121,8 @@ function recompute() {
   renderMonthlyCard(result);
   renderGdsCard(result);
   renderMiscTotal();
+  renderYearlyCashFlow(result);
+  renderAmortizationSchedule(result);
 }
 
 function renderChartDisplay() {
@@ -137,19 +140,71 @@ function renderChartDisplay() {
 
   const owner = lastResult.ownerNetWorth[markerYear];
   const renter = lastResult.renterNetWorth[markerYear];
-  const ahead = owner >= renter ? "Buy" : "Rent + Invest";
+  const isBuyAhead = owner >= renter;
+  const winnerLabel = isBuyAhead ? "Buy" : "Rent + Invest";
+  const gap = Math.abs(owner - renter);
   const flow = lastResult.renterMonthlyFlow;
-  document.getElementById("chart-readout").innerHTML =
-    `Year ${markerYear}: Buy ${formatMoney(owner, { compact: true })} · ` +
-    `Rent + Invest ${formatMoney(renter, { compact: true })} — <strong>${ahead}</strong> ahead by ` +
-    `${formatMoney(Math.abs(owner - renter), { compact: true })}` +
-    `<div class="chart-readout-sub">Year 1 renter flow: rent ${formatMoney(flow.monthlyRent)}/mo + invest ${formatMoney(flow.monthlyInvestmentContribution)}/mo</div>`;
+  document.getElementById("chart-readout").innerHTML = `
+    <div class="chart-readout-card ${isBuyAhead ? "buy-ahead" : "rent-ahead"}">
+      <div class="chart-readout-main">
+        <span class="chart-readout-year">Year ${markerYear}</span>
+        <span class="chart-readout-value">Buy ${formatMoney(owner, { compact: true })}</span>
+        <span class="chart-readout-value">Rent + Invest ${formatMoney(renter, { compact: true })}</span>
+      </div>
+      <div class="chart-readout-result">
+        <strong>${winnerLabel}</strong> is ahead by <strong>${formatMoney(gap, { compact: true })}</strong>
+      </div>
+      <div class="chart-readout-sub">Year 1 renter flow: rent ${formatMoney(flow.monthlyRent)}/mo + invest ${formatMoney(flow.monthlyInvestmentContribution)}/mo</div>
+    </div>
+  `;
 
   const beEl = document.getElementById("breakeven-note");
   if (lastResult.breakeven) {
     beEl.textContent = `Break-even ≈ year ${lastResult.breakeven.year.toFixed(1)} (both worth about ${formatMoney(lastResult.breakeven.value, { compact: true })}).`;
   } else {
     beEl.textContent = `${lastResult.winner === "buy" ? "Buying" : "Renting + investing"} stays ahead for the entire horizon shown.`;
+  }
+}
+
+function applyPreset(presetName) {
+  const presets = {
+    base: {
+      homePrice: DEFAULTS.homePrice,
+      downPayment: DEFAULTS.downPayment,
+      mortgageRate: DEFAULTS.mortgageRate,
+      homeAppreciation: DEFAULTS.homeAppreciation,
+      rentGrowth: DEFAULTS.rentGrowth,
+      monthlyRent: DEFAULTS.monthlyRent,
+    },
+    "higher-rate": {
+      homePrice: DEFAULTS.homePrice,
+      downPayment: DEFAULTS.downPayment,
+      mortgageRate: 6.5,
+      homeAppreciation: DEFAULTS.homeAppreciation,
+      rentGrowth: DEFAULTS.rentGrowth,
+      monthlyRent: DEFAULTS.monthlyRent,
+    },
+    "lower-appreciation": {
+      homePrice: DEFAULTS.homePrice,
+      downPayment: DEFAULTS.downPayment,
+      mortgageRate: DEFAULTS.mortgageRate,
+      homeAppreciation: 0.5,
+      rentGrowth: DEFAULTS.rentGrowth,
+      monthlyRent: DEFAULTS.monthlyRent,
+    },
+    "higher-rent": {
+      homePrice: DEFAULTS.homePrice,
+      downPayment: DEFAULTS.downPayment,
+      mortgageRate: DEFAULTS.mortgageRate,
+      homeAppreciation: DEFAULTS.homeAppreciation,
+      rentGrowth: 4.5,
+      monthlyRent: DEFAULTS.monthlyRent + 300,
+    },
+  };
+
+  const preset = presets[presetName] || presets.base;
+  for (const [key, value] of Object.entries(preset)) {
+    fields[key].set(value);
   }
 }
 
@@ -163,10 +218,12 @@ function updateDownPaymentSub(inputs) {
 function renderHeadline(result, horizonYears) {
   const el = document.getElementById("headline");
   const sub = document.getElementById("headline-sub");
-  const label = result.winner === "rent" ? "Renting + Investing wins" : "Buying wins";
-  el.textContent = `${label} by ${formatMoney(result.diff, { compact: true })} after ${horizonYears} yr${horizonYears === 1 ? "" : "s"}`;
+  const winnerLabel = result.winner === "rent" ? "Renting + investing" : "Buying";
+  const diffLabel = result.winner === "rent" ? "more" : "less";
+  const diffText = formatMoney(result.diff, { compact: true });
+  el.textContent = `${winnerLabel} comes out ahead by about ${diffText} after ${horizonYears} yr${horizonYears === 1 ? "" : "s"}`;
   el.className = result.winner === "rent" ? "winner-rent" : "winner-buy";
-  sub.textContent = `Buy net worth: ${formatMoney(result.finalOwner, { compact: true })} · Rent + Invest net worth: ${formatMoney(result.finalRenter, { compact: true })}`;
+  sub.textContent = `At the end of the period, buying is worth ${formatMoney(result.finalOwner, { compact: true })}, while renting and investing is worth ${formatMoney(result.finalRenter, { compact: true })}.`;
 }
 
 function renderCmhcCard(result) {
@@ -218,6 +275,12 @@ function renderCashCard(result) {
 function renderMonthlyCard(result) {
   const body = document.querySelector("#card-monthly .breakdown-body");
   const b = result.monthlyBreakdown;
+  const miscTotal = MISC_FIELDS.reduce((sum, { key }) => sum + fields[key].get(), 0);
+  const grandTotal = b.total + miscTotal;
+  const miscRows = MISC_FIELDS.map(({ key, label }) => {
+    const value = fields[key].get();
+    return `<div class="row row-indent"><span>• ${label}</span><span>${formatMoney(value)}</span></div>`;
+  }).join("");
   body.innerHTML = `
     <div class="row row-subtotal"><span>Mortgage payment (P&amp;I)</span><span>${formatMoney(b.pi)}</span></div>
     <div class="row row-indent"><span>• Principal</span><span>${formatMoney(b.principal)}</span></div>
@@ -227,7 +290,9 @@ function renderMonthlyCard(result) {
     <div class="row"><span>Insurance</span><span>${formatMoney(b.insurance)}</span></div>
     <div class="row"><span>Maintenance</span><span>${formatMoney(b.maintenance)}</span></div>
     <div class="row"><span>Condo/strata</span><span>${formatMoney(b.condo)}</span></div>
-    <div class="row"><strong>Total</strong><strong>${formatMoney(b.total)}</strong></div>
+    <div class="row row-subtotal"><span>Other monthly expenses</span><span>${formatMoney(miscTotal)}</span></div>
+    ${miscRows}
+    <div class="row"><strong>Estimated total monthly cost</strong><strong>${formatMoney(grandTotal)}</strong></div>
   `;
 }
 
@@ -251,4 +316,58 @@ function renderMiscTotal() {
   const total = MISC_FIELDS.reduce((sum, { key }) => sum + fields[key].get(), 0);
   document.getElementById("misc-total").innerHTML =
     `<div class="row"><strong>Total other expenses</strong><strong>${formatMoney(total)}/mo</strong></div>`;
+}
+
+function renderYearlyCashFlow(result) {
+  const table = document.getElementById("cash-flow-table");
+  const rows = result.yearlyCashFlow.map((row) => `
+    <tr>
+      <td>${row.year}</td>
+      <td>${formatMoney(row.ownerCost, { compact: true })}</td>
+      <td>${formatMoney(row.rentCost, { compact: true })}</td>
+      <td>${formatMoney(row.investmentContribution, { compact: true })}</td>
+      <td>${formatMoney(row.ownerNetWorth, { compact: true })}</td>
+      <td>${formatMoney(row.renterNetWorth, { compact: true })}</td>
+    </tr>
+  `).join("");
+
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Yr</th>
+        <th>Own cost</th>
+        <th>Rent</th>
+        <th>Invest</th>
+        <th>Buy NW</th>
+        <th>Rent NW</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  `;
+}
+
+function renderAmortizationSchedule(result) {
+  const table = document.getElementById("amortization-table");
+  const rows = result.amortizationSchedule.map((row) => `
+    <tr>
+      <td>${row.year}</td>
+      <td>${formatMoney(row.startBalance, { compact: true })}</td>
+      <td>${formatMoney(row.principal, { compact: true })}</td>
+      <td>${formatMoney(row.interest, { compact: true })}</td>
+      <td>${formatMoney(row.endBalance, { compact: true })}</td>
+    </tr>
+  `).join("");
+
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Yr</th>
+        <th>Start</th>
+        <th>Principal</th>
+        <th>Interest</th>
+        <th>End</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  `;
 }

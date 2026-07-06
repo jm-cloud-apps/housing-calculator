@@ -31,6 +31,7 @@
         <span class="legend-item"><span class="dot dot-buy"></span>Buy</span>
         <span class="legend-item"><span class="dot dot-rent"></span>Rent + Invest</span>
       </div>
+      <p class="legend-note">Higher line = better net worth over time</p>
 
       <div class="scrubber-wrap">
         <label for="chart-scrubber" class="scrubber-label">Scrub to a year</label>
@@ -38,6 +39,33 @@
         <p id="chart-readout" class="chart-readout"></p>
       </div>
       <p id="breakeven-note" class="note"></p>
+
+      <div class="insight-grid">
+        <details class="insight-card" open="false">
+          <summary><h3>Sensitivity</h3></summary>
+          <label class="select-field" for="sensitivity-select">
+            <span>Scenario</span>
+            <select id="sensitivity-select">
+              <option value="base">Base case</option>
+              <option value="higher-rate">Higher rate</option>
+              <option value="lower-appreciation">Lower appreciation</option>
+              <option value="higher-rent">Higher rent growth</option>
+            </select>
+          </label>
+        </details>
+        <details class="insight-card">
+          <summary><h3>Year-by-year cash flow</h3></summary>
+          <div class="table-wrap">
+            <table id="cash-flow-table" class="data-table"></table>
+          </div>
+        </details>
+        <details class="insight-card">
+          <summary><h3>Amortization schedule</h3></summary>
+          <div class="table-wrap">
+            <table id="amortization-table" class="data-table"></table>
+          </div>
+        </details>
+      </div>
 
       <div class="breakdown-grid">
         <div class="breakdown-card" id="card-cmhc">

@@ -103,6 +103,7 @@ export function runSimulation(inputs) {
 
   const years = [0];
   const ownerNetWorth = [homePrice - (homePrice * sellingCostRate) / 100 - loanPrincipal];
+  const yearlyCashFlow = [];
 
   let renterPortfolio = cashNeededToClose;
   let totalContributions = cashNeededToClose;
@@ -134,6 +135,37 @@ export function runSimulation(inputs) {
     // Tax adjustment applied every year (not just at the horizon) so both curves stay
     // consistent "sell/liquidate today" net-worth lines throughout the chart.
     renterNetWorth.push(applyCapitalGainsTax(renterPortfolio, totalContributions, taxMode, marginalTaxRate));
+    yearlyCashFlow.push({
+      year,
+      ownerCost: ownerCashCost,
+      rentCost: rentThisYear,
+      investmentContribution: contribution,
+      ownerNetWorth: ownerNetWorth[ownerNetWorth.length - 1],
+      renterNetWorth: renterNetWorth[renterNetWorth.length - 1],
+    });
+  }
+
+  const amortizationSchedule = [];
+  let scheduleBalance = loanPrincipal;
+  for (let year = 1; year <= amortizationYears; year++) {
+    let annualInterest = 0;
+    let annualPrincipal = 0;
+    for (let month = 0; month < 12; month++) {
+      const interest = scheduleBalance * effectiveMonthlyRate(mortgageRate);
+      const principal = Math.min(pmt - interest, scheduleBalance);
+      annualInterest += interest;
+      annualPrincipal += principal;
+      scheduleBalance = Math.max(0, scheduleBalance - principal);
+      if (scheduleBalance <= 0) break;
+    }
+    amortizationSchedule.push({
+      year,
+      startBalance: scheduleBalance + annualPrincipal,
+      principal: annualPrincipal,
+      interest: annualInterest,
+      endBalance: scheduleBalance,
+    });
+    if (scheduleBalance <= 0) break;
   }
 
   const finalOwner = ownerNetWorth[ownerNetWorth.length - 1];
@@ -160,6 +192,8 @@ export function runSimulation(inputs) {
     legalInspectionCost,
     monthlyBreakdown,
     gds,
+    yearlyCashFlow,
+    amortizationSchedule,
     renterMonthlyFlow: {
       monthlyRent,
       monthlyInvestmentContribution: firstYearInvestmentContribution / 12,
