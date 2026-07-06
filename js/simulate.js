@@ -4,6 +4,7 @@ import {
   firstTimeBuyerPttExemption,
   monthlyPayment,
   remainingBalance,
+  effectiveMonthlyRate,
   gdsRatio,
   applyCapitalGainsTax,
 } from "./finance.js";
@@ -66,9 +67,14 @@ export function runSimulation(inputs) {
   // What the buyer spends upfront — also the renter's opportunity-cost starting capital.
   const cashNeededToClose = downPayment + closingCosts;
 
+  const firstMonthInterest = loanPrincipal * effectiveMonthlyRate(mortgageRate);
+  const firstMonthPrincipal = pmt - firstMonthInterest;
+
   // Day-1 monthly breakdown, used for both the GDS check and the UI's cost card.
   const monthlyBreakdown = {
     pi: pmt,
+    principal: firstMonthPrincipal,
+    interest: firstMonthInterest,
     tax: propertyTaxRate,
     heat: heatingMonthly,
     insurance: homeInsuranceMonthly,

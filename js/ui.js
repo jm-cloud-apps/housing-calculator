@@ -196,11 +196,16 @@ function renderCashCard(result) {
   } else {
     pttRow = `<div class="row"><span>BC PTT</span><span>${formatMoney(result.ptt)}</span></div>`;
   }
+  const cmhcNote = result.cmhc?.premium > 0
+    ? `<p class="note">CMHC insurance is financed into the mortgage balance, so it increases your loan size and monthly payment even though it is not a separate upfront cash cost.</p>`
+    : "";
   body.innerHTML = `
     <div class="row"><span>Down payment</span><span>${formatMoney(result.downPayment)}</span></div>
     ${pttRow}
     <div class="row"><span>Legal + inspection</span><span>${formatMoney(result.legalInspectionCost)}</span></div>
     <div class="row"><strong>Total cash needed</strong><strong>${formatMoney(result.cashNeededToClose)}</strong></div>
+    ${cmhcNote}
+    <p class="note">Other Vancouver-area closing costs that are commonly missed include appraisal/title fees, moving costs, utility hookups, and strata/document review fees.</p>
   `;
 }
 
@@ -209,6 +214,8 @@ function renderMonthlyCard(result) {
   const b = result.monthlyBreakdown;
   body.innerHTML = `
     <div class="row"><span>P&amp;I</span><span>${formatMoney(b.pi)}</span></div>
+    <div class="row"><span>Principal</span><span>${formatMoney(b.principal)}</span></div>
+    <div class="row"><span>Interest</span><span>${formatMoney(b.interest)}</span></div>
     <div class="row"><span>Property tax</span><span>${formatMoney(b.tax)}</span></div>
     <div class="row"><span>Heating</span><span>${formatMoney(b.heat)}</span></div>
     <div class="row"><span>Insurance</span><span>${formatMoney(b.insurance)}</span></div>
