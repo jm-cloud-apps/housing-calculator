@@ -32,21 +32,36 @@
         <span class="legend-item"><span class="dot dot-rent"></span>Rent + Invest</span>
       </div>
 
+      <div class="scrubber-wrap">
+        <label for="chart-scrubber" class="scrubber-label">Scrub to a year</label>
+        <input type="range" id="chart-scrubber" min="0" max="25" step="1" value="25" />
+        <p id="chart-readout" class="chart-readout"></p>
+      </div>
+      <p id="breakeven-note" class="note"></p>
+
       <div class="breakdown-grid">
         <div class="breakdown-card" id="card-cmhc">
           <h3>CMHC Insurance</h3>
+          <p class="card-explainer">Required when your down payment is below 20%. It protects the lender if you
+            default — the premium is added to your mortgage principal, not paid upfront.</p>
           <div class="breakdown-body"></div>
         </div>
-        <div class="breakdown-card" id="card-ptt">
-          <h3>BC Property Transfer Tax</h3>
+        <div class="breakdown-card" id="card-cash">
+          <h3>Cash Needed to Close</h3>
+          <p class="card-explainer">Everything you pay upfront: down payment, BC Property Transfer Tax, and
+            legal/inspection fees.</p>
           <div class="breakdown-body"></div>
         </div>
         <div class="breakdown-card" id="card-monthly">
           <h3>Monthly Cost (Owning)</h3>
+          <p class="card-explainer">P&amp;I = Principal &amp; Interest, your core mortgage payment. The other rows are
+            the added recurring costs of ownership.</p>
           <div class="breakdown-body"></div>
         </div>
         <div class="breakdown-card" id="card-gds">
           <h3>GDS Affordability</h3>
+          <p class="card-explainer">Gross Debt Service ratio: mortgage P&amp;I + property tax + heating + 50% of
+            condo fees, as a % of gross household income. Lenders typically cap this at 39%.</p>
           <div class="breakdown-body"></div>
         </div>
       </div>
@@ -60,7 +75,21 @@
         <button type="button" data-tax-mode="taxable" class="seg-btn">Taxable</button>
       </div>
 
+      <label class="checkbox-field">
+        <input type="checkbox" id="firstTimeBuyer" />
+        <span>First-time home buyer? (exempts eligible buyers from BC's one-time Property
+          Transfer Tax — not your recurring annual property tax — on homes under ~$860K)</span>
+      </label>
+
       <div id="advanced-fields" class="fields"></div>
+    </details>
+
+    <details id="misc" class="card">
+      <summary>💳 Other monthly expenses</summary>
+      <p class="card-explainer">Optional — for your own budget awareness. Kept separate from the housing
+        comparison above; these don't affect the Buy vs. Rent numbers.</p>
+      <div id="misc-fields" class="fields"></div>
+      <div class="misc-total" id="misc-total"></div>
     </details>
   </main>
 

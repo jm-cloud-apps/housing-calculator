@@ -332,9 +332,65 @@ input[type="number"]::-webkit-inner-spin-button {
   margin-top: 6px;
 }
 
-/* ---- Advanced (details/summary) ---- */
+/* ---- Explainers, checkboxes, chart scrubber ---- */
 
-details#advanced summary {
+.card-explainer {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.checkbox-field input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.scrubber-wrap {
+  margin-top: 12px;
+  text-align: left;
+}
+
+.scrubber-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.chart-readout {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.misc-total {
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+  padding-top: 12px;
+  font-size: 0.9rem;
+}
+
+.misc-total .row {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ---- Advanced / misc (details/summary) ---- */
+
+main details summary {
   cursor: pointer;
   font-weight: 600;
   list-style: none;
@@ -343,20 +399,20 @@ details#advanced summary {
   justify-content: space-between;
 }
 
-details#advanced summary::-webkit-details-marker {
+main details summary::-webkit-details-marker {
   display: none;
 }
 
-details#advanced summary::after {
+main details summary::after {
   content: "▸";
   color: var(--muted);
 }
 
-details#advanced[open] summary::after {
+main details[open] summary::after {
   content: "▾";
 }
 
-details#advanced[open] summary {
+main details[open] summary {
   margin-bottom: 16px;
 }
 

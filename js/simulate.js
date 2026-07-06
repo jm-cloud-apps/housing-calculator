@@ -1,12 +1,31 @@
 import {
   cmhcInsurance,
   bcPropertyTransferTax,
+  firstTimeBuyerPttExemption,
   monthlyPayment,
   remainingBalance,
   gdsRatio,
   applyCapitalGainsTax,
 } from "./finance.js";
 import { CMHC_STANDARD_MAX_AMORT_YEARS } from "./constants.js";
+
+// First index where the owner/renter net-worth lines cross; linearly interpolates the
+// fractional year and value at the crossing. Returns null if they never cross.
+function findBreakeven(years, ownerSeries, renterSeries) {
+  for (let i = 1; i < years.length; i++) {
+    const prevDiff = ownerSeries[i - 1] - renterSeries[i - 1];
+    const currDiff = ownerSeries[i] - renterSeries[i];
+    if (prevDiff === 0) return { year: years[i - 1], value: ownerSeries[i - 1] };
+    if ((prevDiff < 0 && currDiff > 0) || (prevDiff > 0 && currDiff < 0)) {
+      const t = Math.abs(prevDiff) / (Math.abs(prevDiff) + Math.abs(currDiff));
+      return {
+        year: years[i - 1] + t * (years[i] - years[i - 1]),
+        value: ownerSeries[i - 1] + t * (ownerSeries[i] - ownerSeries[i - 1]),
+      };
+    }
+  }
+  return null;
+}
 
 // Year-by-year projection, not month-by-month: the mortgage math still compounds
 // monthly internally (see finance.js), but netting the owner-cost-vs-rent investing
@@ -33,15 +52,19 @@ export function runSimulation(inputs) {
     legalInspectionCost,
     marginalTaxRate,
     taxMode,
+    isFirstTimeBuyer,
   } = inputs;
 
   const cmhc = cmhcInsurance(homePrice, downPayment);
   const loanPrincipal = cmhc.loanAmount + (cmhc.status === "insured" ? cmhc.premium : 0);
   const pmt = monthlyPayment(loanPrincipal, mortgageRate, amortizationYears);
 
-  const ptt = bcPropertyTransferTax(homePrice);
+  const rawPtt = bcPropertyTransferTax(homePrice);
+  const pttExemption = isFirstTimeBuyer ? firstTimeBuyerPttExemption(homePrice, rawPtt) : 0;
+  const ptt = rawPtt - pttExemption;
   const closingCosts = ptt + legalInspectionCost;
-  const initialLumpSum = downPayment + closingCosts;
+  // What the buyer spends upfront — also the renter's opportunity-cost starting capital.
+  const cashNeededToClose = downPayment + closingCosts;
 
   // Day-1 monthly breakdown, used for both the GDS check and the UI's cost card.
   const monthlyBreakdown = {
@@ -71,8 +94,8 @@ export function runSimulation(inputs) {
   const years = [0];
   const ownerNetWorth = [homePrice - (homePrice * sellingCostRate) / 100 - loanPrincipal];
 
-  let renterPortfolio = initialLumpSum;
-  let totalContributions = initialLumpSum;
+  let renterPortfolio = cashNeededToClose;
+  let totalContributions = cashNeededToClose;
   const renterNetWorth = [applyCapitalGainsTax(renterPortfolio, totalContributions, taxMode, marginalTaxRate)];
 
   for (let year = 1; year <= horizonYears; year++) {
@@ -116,9 +139,15 @@ export function runSimulation(inputs) {
     finalRenter,
     winner,
     diff,
+    breakeven: findBreakeven(years, ownerNetWorth, renterNetWorth),
     cmhc,
     ptt,
+    rawPtt,
+    pttExemption,
     closingCosts,
+    cashNeededToClose,
+    downPayment,
+    legalInspectionCost,
     monthlyBreakdown,
     gds,
     amortizationCaveat: cmhc.status === "insured" && amortizationYears > CMHC_STANDARD_MAX_AMORT_YEARS,

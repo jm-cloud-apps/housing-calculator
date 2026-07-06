@@ -1,4 +1,13 @@
-import { DEFAULTS, RANGES, PRIMARY_FIELDS, ADVANCED_FIELDS, GDS_MAX_RATIO } from "./constants.js";
+import {
+  DEFAULTS,
+  RANGES,
+  PRIMARY_FIELDS,
+  ADVANCED_FIELDS,
+  MISC_FIELDS,
+  MISC_DEFAULTS,
+  MISC_RANGES,
+  GDS_MAX_RATIO,
+} from "./constants.js";
 import { bindSliderField } from "./sliderfield.js";
 import { runSimulation } from "./simulate.js";
 import { drawComparisonChart } from "./chart.js";
@@ -6,13 +15,17 @@ import { formatMoney, formatPercent } from "./finance.js";
 
 const fields = {}; // key -> { get, set }
 let taxMode = DEFAULTS.taxMode;
+let isFirstTimeBuyer = DEFAULTS.isFirstTimeBuyer;
+let lastResult = null;
 
 export function initUI() {
   const primaryContainer = document.getElementById("primary-fields");
   const advancedContainer = document.getElementById("advanced-fields");
+  const miscContainer = document.getElementById("misc-fields");
 
   for (const meta of PRIMARY_FIELDS) renderAndBind(primaryContainer, meta);
   for (const meta of ADVANCED_FIELDS) renderAndBind(advancedContainer, meta);
+  for (const meta of MISC_FIELDS) renderAndBind(miscContainer, meta, MISC_DEFAULTS, MISC_RANGES);
 
   document.getElementById("tax-toggle").addEventListener("click", (e) => {
     const btn = e.target.closest(".seg-btn");
@@ -23,14 +36,21 @@ export function initUI() {
     recompute();
   });
 
+  document.getElementById("firstTimeBuyer").addEventListener("change", (e) => {
+    isFirstTimeBuyer = e.target.checked;
+    recompute();
+  });
+
+  document.getElementById("chart-scrubber").addEventListener("input", renderChartDisplay);
+
   updateMarginalTaxVisibility();
   recompute();
 }
 
-function renderAndBind(container, meta) {
+function renderAndBind(container, meta, defaultsSource = DEFAULTS, rangesSource = RANGES) {
   const { key, label, prefix, suffix, showPercentOf } = meta;
-  const range = RANGES[key];
-  const def = DEFAULTS[key];
+  const range = rangesSource[key];
+  const def = defaultsSource[key];
 
   const wrap = document.createElement("div");
   wrap.className = "field";
@@ -74,24 +94,57 @@ function gatherInputs() {
   const values = {};
   for (const key of Object.keys(fields)) values[key] = fields[key].get();
   values.taxMode = taxMode;
+  values.isFirstTimeBuyer = isFirstTimeBuyer;
   return values;
 }
 
 function recompute() {
   const inputs = gatherInputs();
   const result = runSimulation(inputs);
+  lastResult = result;
+
+  const scrubber = document.getElementById("chart-scrubber");
+  const maxYear = result.years.length - 1;
+  scrubber.max = maxYear;
+  if (Number(scrubber.value) > maxYear) scrubber.value = maxYear;
 
   updateDownPaymentSub(inputs);
   renderHeadline(result, inputs.horizonYears);
-  drawComparisonChart(document.getElementById("net-worth-chart"), {
-    years: result.years,
-    ownerSeries: result.ownerNetWorth,
-    renterSeries: result.renterNetWorth,
-  });
+  renderChartDisplay();
   renderCmhcCard(result);
-  renderPttCard(result);
+  renderCashCard(result);
   renderMonthlyCard(result);
   renderGdsCard(result);
+  renderMiscTotal();
+}
+
+function renderChartDisplay() {
+  if (!lastResult) return;
+  const scrubber = document.getElementById("chart-scrubber");
+  const markerYear = Number(scrubber.value);
+
+  drawComparisonChart(document.getElementById("net-worth-chart"), {
+    years: lastResult.years,
+    ownerSeries: lastResult.ownerNetWorth,
+    renterSeries: lastResult.renterNetWorth,
+    breakeven: lastResult.breakeven,
+    markerYear,
+  });
+
+  const owner = lastResult.ownerNetWorth[markerYear];
+  const renter = lastResult.renterNetWorth[markerYear];
+  const ahead = owner >= renter ? "Buy" : "Rent + Invest";
+  document.getElementById("chart-readout").innerHTML =
+    `Year ${markerYear}: Buy ${formatMoney(owner, { compact: true })} · ` +
+    `Rent + Invest ${formatMoney(renter, { compact: true })} — <strong>${ahead}</strong> ahead by ` +
+    `${formatMoney(Math.abs(owner - renter), { compact: true })}`;
+
+  const beEl = document.getElementById("breakeven-note");
+  if (lastResult.breakeven) {
+    beEl.textContent = `Break-even ≈ year ${lastResult.breakeven.year.toFixed(1)} (both worth about ${formatMoney(lastResult.breakeven.value, { compact: true })}).`;
+  } else {
+    beEl.textContent = `${lastResult.winner === "buy" ? "Buying" : "Renting + investing"} stays ahead for the entire horizon shown.`;
+  }
 }
 
 function updateDownPaymentSub(inputs) {
@@ -132,11 +185,22 @@ function renderCmhcCard(result) {
   body.innerHTML = html;
 }
 
-function renderPttCard(result) {
-  const body = document.querySelector("#card-ptt .breakdown-body");
+function renderCashCard(result) {
+  const body = document.querySelector("#card-cash .breakdown-body");
+  let pttRow;
+  if (result.pttExemption > 0) {
+    pttRow = `
+      <div class="row"><span>BC PTT</span><span><s>${formatMoney(result.rawPtt)}</s> ${formatMoney(result.ptt)}</span></div>
+      <p class="note">First-time buyer exemption saves ${formatMoney(result.pttExemption)}.</p>
+    `;
+  } else {
+    pttRow = `<div class="row"><span>BC PTT</span><span>${formatMoney(result.ptt)}</span></div>`;
+  }
   body.innerHTML = `
-    <div class="row"><span>BC PTT</span><span>${formatMoney(result.ptt)}</span></div>
-    <div class="row"><span>Total closing costs</span><span>${formatMoney(result.closingCosts)}</span></div>
+    <div class="row"><span>Down payment</span><span>${formatMoney(result.downPayment)}</span></div>
+    ${pttRow}
+    <div class="row"><span>Legal + inspection</span><span>${formatMoney(result.legalInspectionCost)}</span></div>
+    <div class="row"><strong>Total cash needed</strong><strong>${formatMoney(result.cashNeededToClose)}</strong></div>
   `;
 }
 
@@ -168,4 +232,10 @@ function renderGdsCard(result) {
     <div class="row"><span>GDS ratio</span><span class="badge ${badgeClass}">${formatPercent(pct)}</span></div>
     <div class="row"><span>Max allowed</span><span>${formatPercent(GDS_MAX_RATIO * 100, 0)}</span></div>
   `;
+}
+
+function renderMiscTotal() {
+  const total = MISC_FIELDS.reduce((sum, { key }) => sum + fields[key].get(), 0);
+  document.getElementById("misc-total").innerHTML =
+    `<div class="row"><strong>Total other expenses</strong><strong>${formatMoney(total)}/mo</strong></div>`;
 }

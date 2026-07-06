@@ -9,17 +9,44 @@ export const DEFAULTS = {
   investReturn: 8, // % nominal annual
   horizonYears: 25,
   rentGrowth: 3, // %/yr
-  homeAppreciation: 3, // %/yr
+  homeAppreciation: 1, // %/yr
   propertyTaxRate: 0.3, // %/yr of current home value
   homeInsuranceMonthly: 100,
   maintenanceRate: 1, // %/yr of current home value (excluded from GDS)
-  heatingMonthly: 100,
-  condoFeeMonthly: 0,
+  heatingMonthly: 50,
+  condoFeeMonthly: 400,
   sellingCostRate: 4, // % of future home value, paid on exit
   legalInspectionCost: 1_500, // flat, one-time closing cost
   marginalTaxRate: 30, // % — only used in 'taxable' tax mode
   taxMode: "tfsa", // 'tfsa' | 'taxable'
+  isFirstTimeBuyer: false,
 };
+
+// Misc monthly living expenses — informational only, kept separate from the
+// housing cash-flow comparison above and not fed into the simulation.
+export const MISC_DEFAULTS = {
+  internetMonthly: 60,
+  phoneMonthly: 60,
+  carInsuranceMonthly: 200,
+  carPaymentMonthly: 200,
+  groceriesMonthly: 500,
+};
+
+export const MISC_RANGES = {
+  internetMonthly: { min: 0, max: 300, step: 5 },
+  phoneMonthly: { min: 0, max: 300, step: 5 },
+  carInsuranceMonthly: { min: 0, max: 1_000, step: 10 },
+  carPaymentMonthly: { min: 0, max: 2_000, step: 10 },
+  groceriesMonthly: { min: 0, max: 3_000, step: 25 },
+};
+
+export const MISC_FIELDS = [
+  { key: "internetMonthly", label: "Internet", prefix: "$", suffix: "/mo" },
+  { key: "phoneMonthly", label: "Phone bill", prefix: "$", suffix: "/mo" },
+  { key: "carInsuranceMonthly", label: "Car insurance", prefix: "$", suffix: "/mo" },
+  { key: "carPaymentMonthly", label: "Car payment", prefix: "$", suffix: "/mo" },
+  { key: "groceriesMonthly", label: "Groceries", prefix: "$", suffix: "/mo" },
+];
 
 // min/max/step for each slider+number field.
 export const RANGES = {
@@ -95,3 +122,10 @@ export const BC_PTT_BRACKETS = [
   { upTo: 3_000_000, rate: 0.03 },
   { upTo: Infinity, rate: 0.05 },
 ];
+
+// BC First Time Home Buyers' Program: full PTT exemption at/under this fair market
+// value, phasing out to $0 exemption at the higher threshold. (2024 BC budget figures —
+// verify current thresholds before relying on this, rules do change.) This exempts the
+// one-time Property Transfer Tax only, not the recurring annual property tax.
+export const BC_FTHB_FULL_EXEMPTION_MAX = 835_000;
+export const BC_FTHB_PHASEOUT_MAX = 860_000;

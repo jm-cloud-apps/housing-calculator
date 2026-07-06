@@ -2,10 +2,11 @@ import { formatMoney } from "./finance.js";
 
 const PADDING = { top: 16, right: 12, bottom: 24, left: 56 };
 
-// Draws two net-worth series on a canvas: gridlines, two colored lines, $ axis labels.
+// Draws two net-worth series on a canvas: gridlines, two colored lines, $ axis labels,
+// an optional break-even marker, and an optional scrubber marker at `markerYear`.
 // Redrawn fully on every input change (cheap enough at <= 30 points) — no internal
 // state, no memory of previous draws.
-export function drawComparisonChart(canvas, { years, ownerSeries, renterSeries }) {
+export function drawComparisonChart(canvas, { years, ownerSeries, renterSeries, breakeven, markerYear }) {
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   const width = rect.width || canvas.clientWidth || 320;
@@ -32,7 +33,10 @@ export function drawComparisonChart(canvas, { years, ownerSeries, renterSeries }
   const yMax = rawMax * 1.1 || 1;
   const yMin = rawMin < 0 ? rawMin * 1.1 : 0;
 
-  const xForIndex = (i) => PADDING.left + (i / (years.length - 1 || 1)) * plotW;
+  // years[i] === i by construction (the simulation always starts at year 0 and steps by
+  // 1), so mapping a raw year value to x works the same as mapping an index.
+  const xForYear = (yr) => PADDING.left + (yr / (years.length - 1 || 1)) * plotW;
+  const xForIndex = (i) => xForYear(years[i]);
   const yForValue = (v) => PADDING.top + (1 - (v - yMin) / (yMax - yMin || 1)) * plotH;
 
   // Gridlines + Y labels
@@ -75,6 +79,40 @@ export function drawComparisonChart(canvas, { years, ownerSeries, renterSeries }
 
   drawLine(ctx, years, ownerSeries, xForIndex, yForValue, buyColor);
   drawLine(ctx, years, renterSeries, xForIndex, yForValue, rentColor);
+
+  if (breakeven) {
+    const x = xForYear(breakeven.year);
+    const y = yForValue(breakeven.value);
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = mutedColor;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#fff";
+    ctx.stroke();
+  }
+
+  if (markerYear != null && ownerSeries[markerYear] != null) {
+    const x = xForYear(markerYear);
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = mutedColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, PADDING.top);
+    ctx.lineTo(x, height - PADDING.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    for (const [value, color] of [
+      [ownerSeries[markerYear], buyColor],
+      [renterSeries[markerYear], rentColor],
+    ]) {
+      ctx.beginPath();
+      ctx.arc(x, yForValue(value), 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+  }
 }
 
 function drawLine(ctx, years, series, xForIndex, yForValue, color) {

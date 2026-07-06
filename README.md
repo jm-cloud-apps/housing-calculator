@@ -15,13 +15,20 @@ Live: https://jm-cloud-apps.github.io/housing-calculator/
   convention (not the US monthly formula).
 - **CMHC mortgage default insurance** — minimum down payment tiers (5% on the first
   $500k + 10% above), premium rate tiers by loan-to-value, and the $1.5M insurability cap.
-- **BC Property Transfer Tax** — marginal brackets (1% / 2% / 3% / 5%+).
+- **BC Property Transfer Tax** — marginal brackets (1% / 2% / 3% / 5%+), with an optional
+  First-Time Home Buyers' exemption (full exemption under $835k, phasing out to $860k).
 - **GDS (Gross Debt Service) ratio** — the 39% affordability check against P&I + property
   tax + heating + 50% of condo fees, shown when a gross household income is entered.
+- **Cash needed to close** — down payment + BC PTT (after exemption, if applicable) +
+  legal/inspection costs, shown as a single upfront total.
 - **Rent + invest side** — the renter invests what they didn't spend on a down payment and
   closing costs, plus the ongoing gap between owning costs and rent, compounding at a
   configurable return. A TFSA (tax-free) / taxable (50% capital-gains inclusion) toggle
   controls how the portfolio is taxed.
+- **Chart scrubber + break-even marker** — drag to see Buy vs. Rent+Invest net worth at any
+  year, with the crossing point (if any) marked on the chart.
+- **Other monthly expenses** (internet, phone, car insurance/payment, groceries) — purely
+  informational, kept separate from the housing comparison.
 
 ## Documented simplifying assumptions
 
@@ -31,8 +38,10 @@ Live: https://jm-cloud-apps.github.io/housing-calculator/
   year rather than modeling a shortfall funded from elsewhere.
 - Property tax and maintenance scale with the home's *current appreciated value*, not the
   original purchase price.
-- Only GDS is checked, not TDS (Total Debt Service) — no other debts are modeled.
-- The BC Property Transfer Tax's First-Time Home Buyers' Exemption is not modeled.
+- Only GDS is checked, not TDS (Total Debt Service) — no other debts are modeled. The
+  "Other monthly expenses" section is informational only and isn't factored into GDS/TDS.
+- The BC First-Time Home Buyers' PTT exemption thresholds ($835k / $860k) reflect the 2024
+  BC budget figures — verify current thresholds before relying on this, rules do change.
 - The 30-year insured amortization option (first-time buyers / new builds only) is shown
   as a caveat note, not enforced as a hard rule.
 

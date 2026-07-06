@@ -1,4 +1,10 @@
-import { CMHC_PREMIUM_TIERS, CMHC_MAX_INSURABLE_PRICE, BC_PTT_BRACKETS } from "./constants.js";
+import {
+  CMHC_PREMIUM_TIERS,
+  CMHC_MAX_INSURABLE_PRICE,
+  BC_PTT_BRACKETS,
+  BC_FTHB_FULL_EXEMPTION_MAX,
+  BC_FTHB_PHASEOUT_MAX,
+} from "./constants.js";
 
 // Canadian mortgages compound semi-annually, not monthly — this is NOT the US formula.
 export function effectiveMonthlyRate(annualRatePct) {
@@ -84,6 +90,16 @@ export function bcPropertyTransferTax(price) {
     lower = upTo;
   }
   return tax;
+}
+
+// BC First Time Home Buyers' Program: how much of the PTT otherwise owed is exempted.
+// Full exemption at/under the full-exemption threshold, linearly phasing out to $0 by
+// the phase-out threshold, no exemption above it.
+export function firstTimeBuyerPttExemption(price, rawTax) {
+  if (price <= BC_FTHB_FULL_EXEMPTION_MAX) return rawTax;
+  if (price >= BC_FTHB_PHASEOUT_MAX) return 0;
+  const ratio = (BC_FTHB_PHASEOUT_MAX - price) / (BC_FTHB_PHASEOUT_MAX - BC_FTHB_FULL_EXEMPTION_MAX);
+  return rawTax * ratio;
 }
 
 // GDS = (monthly P&I + monthly property tax + monthly heating + 50% monthly condo fee)
