@@ -1,15 +1,15 @@
 // Default slider/field values. All prices in CAD.
 export const DEFAULTS = {
-  homePrice: 550_000,
-  downPayment: 27_500, // 5%
-  monthlyRent: 2_600,
+  homePrice: 500_000,
+  downPayment: 60_000, // 5%
+  monthlyRent: 2_650,
   grossIncome: 60_000, // optional; 0 hides the GDS check
-  mortgageRate: 5.15, // % nominal annual, semi-annual compounding — illustrative only, not a live rate
+  mortgageRate: 4.00, // % nominal annual, semi-annual compounding — illustrative only, not a live rate
   amortizationYears: 25,
-  investReturn: 8, // % nominal annual
+  investReturn: 7, // % nominal annual
   horizonYears: 25,
-  rentGrowth: 3, // %/yr
-  homeAppreciation: 1, // %/yr
+  rentGrowth: 2.5, // %/yr
+  homeAppreciation: 2, // %/yr
   propertyTaxRate: 200, // fixed monthly property tax cost
   homeInsuranceMonthly: 100,
   maintenanceRate: 450, // fixed monthly maintenance cost (excluded from GDS)
