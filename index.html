@@ -20,6 +20,24 @@
       <div id="primary-fields" class="fields"></div>
     </section>
 
+    <details id="advanced" class="card advanced-card">
+      <summary>⚙️ Assumptions & tax settings</summary>
+      <p class="card-explainer">Adjust the assumptions behind your projection, including investment tax treatment and first-time buyer eligibility.</p>
+
+      <div class="tax-toggle" id="tax-toggle">
+        <button type="button" data-tax-mode="tfsa" class="seg-btn active">Tax-Free (TFSA)</button>
+        <button type="button" data-tax-mode="taxable" class="seg-btn">Taxable</button>
+      </div>
+
+      <label class="checkbox-field">
+        <input type="checkbox" id="firstTimeBuyer" checked />
+        <span>First-time home buyer? (exempts eligible buyers from BC's one-time Property
+          Transfer Tax — not your recurring annual property tax — on homes under ~$860K)</span>
+      </label>
+
+      <div id="advanced-fields" class="fields"></div>
+    </details>
+
     <section id="results" class="card results-card">
       <h2 id="headline">—</h2>
       <p id="headline-sub" class="headline-sub"></p>
@@ -94,23 +112,6 @@
         </div>
       </div>
     </section>
-
-    <details id="advanced" class="card">
-      <summary>⚙️ Advanced assumptions</summary>
-
-      <div class="tax-toggle" id="tax-toggle">
-        <button type="button" data-tax-mode="tfsa" class="seg-btn active">Tax-Free (TFSA)</button>
-        <button type="button" data-tax-mode="taxable" class="seg-btn">Taxable</button>
-      </div>
-
-      <label class="checkbox-field">
-        <input type="checkbox" id="firstTimeBuyer" checked />
-        <span>First-time home buyer? (exempts eligible buyers from BC's one-time Property
-          Transfer Tax — not your recurring annual property tax — on homes under ~$860K)</span>
-      </label>
-
-      <div id="advanced-fields" class="fields"></div>
-    </details>
 
     <details id="misc" class="card">
       <summary>💳 Other monthly expenses</summary>
