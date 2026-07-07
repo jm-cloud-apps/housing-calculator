@@ -5,7 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>🏠 Buy vs Rent+Invest — Vancouver</title>
   <meta name="description" content="Compare buying a home in Vancouver, BC vs renting and investing the difference in VFV (S&P 500)." />
+  <meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Buy vs Rent" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -16,6 +24,10 @@
   </header>
 
   <main>
+    <button type="button" id="result-bar" class="result-bar" aria-live="polite">
+      <span class="result-bar-text">—</span>
+    </button>
+
     <section id="primary-inputs" class="card">
       <div id="primary-fields" class="fields"></div>
     </section>
@@ -31,8 +43,9 @@
 
       <label class="checkbox-field">
         <input type="checkbox" id="firstTimeBuyer" checked />
-        <span>First-time home buyer? (exempts eligible buyers from BC's one-time Property
-          Transfer Tax — not your recurring annual property tax — on homes under ~$860K)</span>
+        <span>First-time home buyer? (knocks up to $8,000 off BC's one-time Property
+          Transfer Tax — not your recurring annual property tax — full below ~$835K,
+          phasing out by ~$860K)</span>
       </label>
 
       <div id="advanced-fields" class="fields"></div>
@@ -46,13 +59,13 @@
         <canvas id="net-worth-chart"></canvas>
       </div>
       <div id="chart-legend" class="legend">
-        <span class="legend-item"><span class="dot dot-buy"></span>Buy</span>
-        <span class="legend-item"><span class="dot dot-rent"></span>Rent + Invest</span>
+        <span class="legend-item"><span class="swatch swatch-buy"></span>Buy</span>
+        <span class="legend-item"><span class="swatch swatch-rent"></span>Rent + Invest (dashed)</span>
       </div>
       <p class="legend-note">Higher line = better net worth over time</p>
 
       <div class="scrubber-wrap">
-        <label for="chart-scrubber" class="scrubber-label">Scrub to a year</label>
+        <label for="chart-scrubber" class="scrubber-label">Drag across the chart, or use the slider, to scrub to a year</label>
         <input type="range" id="chart-scrubber" min="0" max="25" step="1" value="25" />
         <p id="chart-readout" class="chart-readout"></p>
       </div>

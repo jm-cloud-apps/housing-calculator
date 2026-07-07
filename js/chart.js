@@ -1,6 +1,6 @@
 import { formatMoney } from "./finance.js";
 
-const PADDING = { top: 16, right: 12, bottom: 24, left: 56 };
+export const PADDING = { top: 16, right: 12, bottom: 24, left: 56 };
 
 // Draws two net-worth series on a canvas: gridlines, two colored lines, $ axis labels,
 // an optional break-even marker, and an optional scrubber marker at `markerYear`.
@@ -78,7 +78,9 @@ export function drawComparisonChart(canvas, { years, ownerSeries, renterSeries, 
   });
 
   drawLine(ctx, years, ownerSeries, xForIndex, yForValue, buyColor);
-  drawLine(ctx, years, renterSeries, xForIndex, yForValue, rentColor);
+  // Rent line is dashed so the two series are distinguishable without relying on color
+  // (colorblind-safe — blue/green is a hard pair for red-green deficiencies).
+  drawLine(ctx, years, renterSeries, xForIndex, yForValue, rentColor, [7, 5]);
 
   if (breakeven) {
     const x = xForYear(breakeven.year);
@@ -115,7 +117,7 @@ export function drawComparisonChart(canvas, { years, ownerSeries, renterSeries, 
   }
 }
 
-function drawLine(ctx, years, series, xForIndex, yForValue, color) {
+function drawLine(ctx, years, series, xForIndex, yForValue, color, dash = []) {
   ctx.beginPath();
   series.forEach((v, i) => {
     const x = xForIndex(i);
@@ -123,8 +125,10 @@ function drawLine(ctx, years, series, xForIndex, yForValue, color) {
     if (i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   });
+  ctx.setLineDash(dash);
   ctx.strokeStyle = color;
   ctx.lineWidth = 2.5;
   ctx.lineJoin = "round";
   ctx.stroke();
+  ctx.setLineDash([]);
 }

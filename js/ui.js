@@ -10,7 +10,7 @@ import {
 } from "./constants.js";
 import { bindSliderField } from "./sliderfield.js";
 import { runSimulation } from "./simulate.js";
-import { drawComparisonChart } from "./chart.js";
+import { drawComparisonChart, PADDING as CHART_PADDING } from "./chart.js";
 import { formatMoney, formatPercent } from "./finance.js";
 
 const fields = {}; // key -> { get, set }
@@ -44,6 +44,12 @@ export function initUI() {
   document.getElementById("chart-scrubber").addEventListener("input", renderChartDisplay);
   document.getElementById("sensitivity-select").addEventListener("change", (e) => applyPreset(e.target.value));
 
+  document.getElementById("result-bar").addEventListener("click", () => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById("results").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  });
+  bindChartScrub();
+
   const firstTimeBuyerInput = document.getElementById("firstTimeBuyer");
   firstTimeBuyerInput.checked = DEFAULTS.isFirstTimeBuyer;
   isFirstTimeBuyer = firstTimeBuyerInput.checked;
@@ -56,6 +62,9 @@ function renderAndBind(container, meta, defaultsSource = DEFAULTS, rangesSource 
   const { key, label, prefix, suffix, showPercentOf, hint } = meta;
   const range = rangesSource[key];
   const def = defaultsSource[key];
+  // iOS's decimal keypad has no minus key, so fields that allow negatives fall back to the
+  // full keyboard (which does); the +/- steppers also let you cross zero without typing.
+  const inputMode = range.min < 0 ? "text" : "decimal";
 
   const wrap = document.createElement("div");
   wrap.className = "field";
@@ -63,25 +72,43 @@ function renderAndBind(container, meta, defaultsSource = DEFAULTS, rangesSource 
   wrap.innerHTML = `
     <div class="field-label-row">
       <label for="${key}-slider">${label}</label>
-      <span class="field-sub" id="${key}-sub"></span>
+      <div class="value-group">
+        <button type="button" class="stepper" id="${key}-dec" aria-label="Decrease ${label}">−</button>
+        <div class="number-wrap">
+          ${prefix ? `<span class="unit">${prefix}</span>` : ""}
+          <input type="text" id="${key}-value" inputmode="${inputMode}" autocomplete="off" step="${range.step}" value="${def}" />
+          ${suffix ? `<span class="unit">${suffix}</span>` : ""}
+        </div>
+        <button type="button" class="stepper" id="${key}-inc" aria-label="Increase ${label}">+</button>
+      </div>
     </div>
+    <span class="field-sub" id="${key}-sub"></span>
     ${hint ? `<p class="field-hint">${hint}</p>` : ""}
     <div class="field-controls">
       <input type="range" id="${key}-slider" min="${range.min}" max="${range.max}" step="${range.step}" value="${def}" />
-      <div class="number-wrap">
-        ${prefix ? `<span class="unit">${prefix}</span>` : ""}
-        <input type="text" id="${key}-value" inputmode="decimal" step="${range.step}" value="${def}" />
-        ${suffix ? `<span class="unit">${suffix}</span>` : ""}
-      </div>
     </div>
   `;
   container.appendChild(wrap);
+
+  const formatAria = (v) => {
+    const num = new Intl.NumberFormat("en-CA", { maximumFractionDigits: 2 }).format(v);
+    return `${prefix ?? ""}${num}${suffix ?? ""}`.trim();
+  };
 
   fields[key] = bindSliderField(key, {
     ...range,
     value: def,
     onChange: () => recompute(),
+    formatAria,
   });
+
+  // Nudge by one step, snapped to the step grid so 0.1-type steps don't accumulate float drift.
+  const stepBy = (dir) => {
+    const cur = fields[key].get();
+    fields[key].set(Math.round((cur + dir * range.step) / range.step) * range.step);
+  };
+  document.getElementById(`${key}-dec`).addEventListener("click", () => stepBy(-1));
+  document.getElementById(`${key}-inc`).addEventListener("click", () => stepBy(1));
 
   if (showPercentOf) fields[key]._showPercentOf = showPercentOf;
 }
@@ -115,6 +142,7 @@ function recompute() {
   if (Number(scrubber.value) > maxYear) scrubber.value = maxYear;
 
   updateDownPaymentSub(inputs);
+  renderResultBar(result, inputs.horizonYears);
   renderHeadline(result, inputs.horizonYears);
   renderChartDisplay();
   renderCmhcCard(result);
@@ -124,6 +152,45 @@ function recompute() {
   renderMiscTotal(result);
   renderYearlyCashFlow(result);
   renderAmortizationSchedule(result);
+}
+
+function renderResultBar(result, horizonYears) {
+  const bar = document.getElementById("result-bar");
+  const isBuy = result.winner === "buy";
+  bar.className = `result-bar ${isBuy ? "buy" : "rent"}`;
+  bar.querySelector(".result-bar-text").innerHTML =
+    `${isBuy ? "🏠" : "📈"} <strong>${isBuy ? "Buy" : "Rent + Invest"}</strong> ahead by ` +
+    `<strong>${formatMoney(result.diff, { compact: true })}</strong> · ${horizonYears} yr${horizonYears === 1 ? "" : "s"}`;
+}
+
+// Touch/drag anywhere on the chart to move the year marker (iOS Stocks-style), keeping the
+// range slider below in sync as an accessible fallback.
+function bindChartScrub() {
+  const canvas = document.getElementById("net-worth-chart");
+  const scrubber = document.getElementById("chart-scrubber");
+  let scrubbing = false;
+
+  const yearFromEvent = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const plotW = rect.width - CHART_PADDING.left - CHART_PADDING.right;
+    const frac = plotW > 0 ? (e.clientX - rect.left - CHART_PADDING.left) / plotW : 0;
+    const maxYear = lastResult ? lastResult.years.length - 1 : Number(scrubber.max);
+    return Math.max(0, Math.min(maxYear, Math.round(frac * maxYear)));
+  };
+  const scrubTo = (e) => {
+    scrubber.value = yearFromEvent(e);
+    renderChartDisplay();
+  };
+
+  canvas.addEventListener("pointerdown", (e) => {
+    scrubbing = true;
+    try { canvas.setPointerCapture(e.pointerId); } catch { /* non-capturable pointer — fine */ }
+    scrubTo(e);
+  });
+  canvas.addEventListener("pointermove", (e) => { if (scrubbing) scrubTo(e); });
+  const end = () => { scrubbing = false; };
+  canvas.addEventListener("pointerup", end);
+  canvas.addEventListener("pointercancel", end);
 }
 
 function renderChartDisplay() {

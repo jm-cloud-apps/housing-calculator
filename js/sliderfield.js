@@ -3,9 +3,14 @@
 // Expects HTML like:
 //   <input type="range" id="${id}-slider" ...>
 //   <input type="number" id="${id}-value" ...>
-export function bindSliderField(id, { min, max, step, value, onChange }) {
+export function bindSliderField(id, { min, max, step, value, onChange, formatAria }) {
   const slider = document.getElementById(`${id}-slider`);
   const number = document.getElementById(`${id}-value`);
+
+  // Announce a human-readable value to VoiceOver (e.g. "$500,000") instead of a bare number.
+  const syncAria = (v) => {
+    if (formatAria) slider.setAttribute("aria-valuetext", formatAria(v));
+  };
 
   const clamp = (v) => (Number.isNaN(v) ? current : Math.min(max, Math.max(min, v)));
   const decimals = (String(step).split(".")[1] || "").length;
@@ -28,6 +33,7 @@ export function bindSliderField(id, { min, max, step, value, onChange }) {
   function applyToDom(v) {
     slider.value = v;
     number.value = formatForStep(v);
+    syncAria(v);
   }
 
   function set(v) {
@@ -40,6 +46,7 @@ export function bindSliderField(id, { min, max, step, value, onChange }) {
   slider.addEventListener("input", () => {
     current = Number(slider.value);
     number.value = formatForStep(current);
+    syncAria(current);
     onChange(current);
   });
 

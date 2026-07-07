@@ -3,7 +3,7 @@
   --panel: #ffffff;
   --line: #dbe4f0;
   --text: #1f2937;
-  --muted: #6b7280;
+  --muted: #556070;
   --buy: #2563eb;
   --rent: #16a34a;
   --warn: #f59e0b;
@@ -11,13 +11,58 @@
   --good: #16a34a;
   --accent-soft: rgba(37, 99, 235, 0.08);
   --accent-soft-2: rgba(22, 163, 74, 0.1);
+  --own-more-bg: rgba(245, 158, 11, 0.12);
+  --own-more-fg: #b45309;
+  --own-less-bg: rgba(22, 163, 74, 0.12);
+  --own-less-fg: #15803d;
+  --buy-ahead-fg: #2563eb;
+  --rent-ahead-fg: #059669;
   --radius: 14px;
   --shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+  color-scheme: light dark;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Dark mode — overrides the palette; the canvas chart reads these same variables,
+   so it recolors automatically. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0f17;
+    --panel: #161b24;
+    --line: #2a323f;
+    --text: #e8eaed;
+    --muted: #9aa4b3;
+    --buy: #4f8cff;
+    --rent: #34d399;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --good: #34d399;
+    --accent-soft: rgba(79, 140, 255, 0.16);
+    --accent-soft-2: rgba(52, 211, 153, 0.16);
+    --shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    /* Brighter verdict/readout colors for legibility on a dark background. Driven through
+       variables (not positioned overrides) so they win regardless of rule order. */
+    --own-more-bg: rgba(251, 191, 36, 0.16);
+    --own-more-fg: #fcd34d;
+    --own-less-bg: rgba(52, 211, 153, 0.16);
+    --own-less-fg: #6ee7b7;
+    --buy-ahead-fg: #7aa9ff;
+    --rent-ahead-fg: #6ee7b7;
+  }
 }
 
 * {
   box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 html,
@@ -33,6 +78,19 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+}
+
+/* Tabular figures so dollar/percent readouts keep constant digit width and don't
+   jitter as sliders move — standard for finance UIs. */
+.breakdown-body,
+.misc-total,
+.data-table,
+.chart-readout,
+.field-sub,
+.gds-pct,
+.sticky-result,
+input[type="text"] {
+  font-variant-numeric: tabular-nums;
 }
 
 .app-header {
@@ -69,6 +127,38 @@ main {
   margin: 0 auto;
 }
 
+/* Sticky verdict pill — keeps the answer in view while you adjust inputs; tap to jump to
+   the chart. Fixed (theme-independent) backgrounds so white text stays legible. */
+.result-bar {
+  position: sticky;
+  top: max(8px, env(safe-area-inset-top));
+  z-index: 20;
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #fff;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: var(--shadow);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.result-bar.buy {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+}
+
+.result-bar.rent {
+  background: linear-gradient(135deg, #15803d, #065f46);
+}
+
+.result-bar strong {
+  font-weight: 800;
+}
+
 .card {
   background: var(--panel);
   border-radius: var(--radius);
@@ -87,10 +177,10 @@ main {
 
 .field-label-row {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 10px;
 }
 
 .field label {
@@ -98,17 +188,55 @@ main {
   font-size: 0.92rem;
 }
 
+/* Value + stepper cluster on the label row (drops to its own right-aligned line on narrow
+   screens with long labels); the slider sits full-width below it. */
+.value-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.stepper {
+  width: 40px;
+  min-height: 44px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper:active {
+  background: var(--accent-soft);
+  border-color: var(--buy);
+}
+
 .field-sub {
+  display: block;
   color: var(--muted);
   font-size: 0.85rem;
-  white-space: nowrap;
+  margin: -4px 0 8px;
+}
+
+.field-sub:empty {
+  display: none;
 }
 
 .field-hint {
   margin: -2px 0 10px;
   color: var(--muted);
-  font-size: 0.78rem;
-  line-height: 1.35;
+  font-size: 0.82rem;
+  line-height: 1.4;
 }
 
 .field-controls {
@@ -192,29 +320,34 @@ input[type="text"]::-webkit-inner-spin-button {
 
 /* ---- Tax toggle ---- */
 
+/* iOS UISegmentedControl look: a gray track with a raised "capsule" on the active option. */
 .tax-toggle {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   margin-bottom: 20px;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
 }
 
 .seg-btn {
   flex: 1;
-  min-height: 44px;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  border-radius: 10px;
+  min-height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--muted);
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .seg-btn.active {
-  background: linear-gradient(135deg, var(--buy), var(--rent));
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
 }
 
 /* ---- Results ---- */
@@ -251,6 +384,8 @@ input[type="text"]::-webkit-inner-spin-button {
   width: 100%;
   height: 220px;
   display: block;
+  touch-action: none; /* let horizontal drags scrub instead of scrolling the page */
+  cursor: crosshair;
 }
 
 .legend {
@@ -274,19 +409,20 @@ input[type="text"]::-webkit-inner-spin-button {
   gap: 6px;
 }
 
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.swatch {
   display: inline-block;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
 }
 
-.dot-buy {
+.swatch-buy {
   background: var(--buy);
 }
 
-.dot-rent {
-  background: var(--rent);
+/* Dashed swatch mirrors the dashed rent line in the chart. */
+.swatch-rent {
+  background: repeating-linear-gradient(90deg, var(--rent) 0 5px, transparent 5px 9px);
 }
 
 .insight-grid {
@@ -405,6 +541,15 @@ input[type="text"]::-webkit-inner-spin-button {
   gap: 8px;
 }
 
+/* Hairline separators between top-level rows for an iOS grouped-inset feel (not the
+   indented sub-rows or the emphasized subtotal/total, which have their own styling, and
+   not the nested compare block). */
+.breakdown-body > .row + .row:not(.row-indent):not(.row-total):not(.row-subtotal) {
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
 .breakdown-body .row-subtotal {
   font-weight: 700;
   margin-top: 2px;
@@ -465,13 +610,13 @@ input[type="text"]::-webkit-inner-spin-button {
 }
 
 .compare-verdict.compare-own-more {
-  background: rgba(245, 158, 11, 0.12);
-  color: #b45309;
+  background: var(--own-more-bg);
+  color: var(--own-more-fg);
 }
 
 .compare-verdict.compare-own-less {
-  background: rgba(22, 163, 74, 0.12);
-  color: #15803d;
+  background: var(--own-less-bg);
+  color: var(--own-less-fg);
 }
 
 /* GDS affordability verdict header. */
@@ -531,7 +676,7 @@ input[type="text"]::-webkit-inner-spin-button {
 
 .note {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   margin-top: 6px;
 }
 
@@ -540,8 +685,8 @@ input[type="text"]::-webkit-inner-spin-button {
 .card-explainer {
   margin: 0 0 10px;
   color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.4;
+  font-size: 0.85rem;
+  line-height: 1.45;
 }
 
 .checkbox-field {
@@ -621,12 +766,12 @@ input[type="text"]::-webkit-inner-spin-button {
 
 .chart-readout-card.buy-ahead .chart-readout-result strong,
 .chart-readout-card.buy-ahead .chart-readout-result {
-  color: #2563eb;
+  color: var(--buy-ahead-fg);
 }
 
 .chart-readout-card.rent-ahead .chart-readout-result strong,
 .chart-readout-card.rent-ahead .chart-readout-result {
-  color: #059669;
+  color: var(--rent-ahead-fg);
 }
 
 .chart-readout-sub {

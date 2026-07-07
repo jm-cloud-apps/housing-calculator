@@ -2,6 +2,7 @@ import {
   CMHC_PREMIUM_TIERS,
   CMHC_MAX_INSURABLE_PRICE,
   BC_PTT_BRACKETS,
+  BC_FTHB_EXEMPTION_BASE_PRICE,
   BC_FTHB_FULL_EXEMPTION_MAX,
   BC_FTHB_PHASEOUT_MAX,
 } from "./constants.js";
@@ -93,13 +94,16 @@ export function bcPropertyTransferTax(price) {
 }
 
 // BC First Time Home Buyers' Program: how much of the PTT otherwise owed is exempted.
-// Full exemption at/under the full-exemption threshold, linearly phasing out to $0 by
-// the phase-out threshold, no exemption above it.
+// The exemption is capped at the PTT on the first $500k (≈$8,000) — it is NOT a waiver of
+// the whole tax for pricier homes. Full for homes ≤ $500k (where the whole PTT is ≤ the
+// cap), flat cap from $500k–$835k, then the cap phases linearly to $0 by $860k.
 export function firstTimeBuyerPttExemption(price, rawTax) {
-  if (price <= BC_FTHB_FULL_EXEMPTION_MAX) return rawTax;
   if (price >= BC_FTHB_PHASEOUT_MAX) return 0;
+  const maxExemption = bcPropertyTransferTax(BC_FTHB_EXEMPTION_BASE_PRICE);
+  const cappedExemption = Math.min(rawTax, maxExemption);
+  if (price <= BC_FTHB_FULL_EXEMPTION_MAX) return cappedExemption;
   const ratio = (BC_FTHB_PHASEOUT_MAX - price) / (BC_FTHB_PHASEOUT_MAX - BC_FTHB_FULL_EXEMPTION_MAX);
-  return rawTax * ratio;
+  return cappedExemption * ratio;
 }
 
 // GDS = (monthly P&I + monthly property tax + monthly heating + 50% monthly condo fee)

@@ -124,9 +124,13 @@ export const BC_PTT_BRACKETS = [
   { upTo: Infinity, rate: 0.05 },
 ];
 
-// BC First Time Home Buyers' Program: full PTT exemption at/under this fair market
-// value, phasing out to $0 exemption at the higher threshold. (2024 BC budget figures —
-// verify current thresholds before relying on this, rules do change.) This exempts the
-// one-time Property Transfer Tax only, not the recurring annual property tax.
-export const BC_FTHB_FULL_EXEMPTION_MAX = 835_000;
-export const BC_FTHB_PHASEOUT_MAX = 860_000;
+// BC First Time Home Buyers' Program (2024 rules — verify before relying on these, they
+// do change). Exempts the one-time Property Transfer Tax only, not the recurring annual
+// property tax. The exemption is the PTT owed on the *first $500k* of value (≈$8,000), so:
+//   • home ≤ $500k                 → full exemption (whole PTT waived)
+//   • $500k < home ≤ $835k         → flat ~$8,000 knocked off (still owe tax above $500k)
+//   • $835k < home < $860k         → the ~$8,000 phases proportionally down to $0
+//   • home ≥ $860k                 → no exemption
+export const BC_FTHB_EXEMPTION_BASE_PRICE = 500_000; // exemption = PTT on this first slice
+export const BC_FTHB_FULL_EXEMPTION_MAX = 835_000; // full ~$8,000 exemption up to here
+export const BC_FTHB_PHASEOUT_MAX = 860_000; // exemption reaches $0 here
