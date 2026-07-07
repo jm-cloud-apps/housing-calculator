@@ -11,11 +11,12 @@ import {
 import { bindSliderField } from "./sliderfield.js";
 import { runSimulation } from "./simulate.js";
 import { drawComparisonChart, PADDING as CHART_PADDING } from "./chart.js";
-import { formatMoney, formatPercent } from "./finance.js";
+import { formatMoney, formatPercent, PAYMENT_FREQUENCIES } from "./finance.js";
 
 const fields = {}; // key -> { get, set }
 let taxMode = DEFAULTS.taxMode;
 let isFirstTimeBuyer = DEFAULTS.isFirstTimeBuyer;
+let paymentFrequency = DEFAULTS.paymentFrequency;
 let lastResult = null;
 
 export function initUI() {
@@ -38,6 +39,16 @@ export function initUI() {
 
   document.getElementById("firstTimeBuyer").addEventListener("change", (e) => {
     isFirstTimeBuyer = e.target.checked;
+    recompute();
+  });
+
+  const freqSelect = document.getElementById("payment-frequency");
+  freqSelect.innerHTML = Object.entries(PAYMENT_FREQUENCIES)
+    .map(([key, f]) => `<option value="${key}">${f.label}</option>`)
+    .join("");
+  freqSelect.value = paymentFrequency;
+  freqSelect.addEventListener("change", (e) => {
+    paymentFrequency = e.target.value;
     recompute();
   });
 
@@ -128,6 +139,7 @@ function gatherInputs() {
   for (const key of Object.keys(fields)) values[key] = fields[key].get();
   values.taxMode = taxMode;
   values.isFirstTimeBuyer = isFirstTimeBuyer;
+  values.paymentFrequency = paymentFrequency;
   return values;
 }
 
@@ -142,6 +154,7 @@ function recompute() {
   if (Number(scrubber.value) > maxYear) scrubber.value = maxYear;
 
   updateDownPaymentSub(inputs);
+  renderFrequencyDetail(result);
   renderResultBar(result, inputs.horizonYears);
   renderHeadline(result, inputs.horizonYears);
   renderChartDisplay();
@@ -276,6 +289,22 @@ function applyPreset(presetName) {
   }
 }
 
+function renderFrequencyDetail(result) {
+  const el = document.getElementById("frequency-detail");
+  const p = result.paymentPlan;
+  const freq = PAYMENT_FREQUENCIES[p.frequency];
+  const per = p.frequency === "monthly"
+    ? `${formatMoney(p.perPayment)}/mo`
+    : `${formatMoney(p.perPayment)} every ${freq.every} (≈ ${formatMoney(p.monthlyEquivalent)}/mo)`;
+
+  const sooner = p.contractedAmortYears - p.payoffYears;
+  const payoff = sooner > 0.05
+    ? `pays off in ${p.payoffYears.toFixed(1)} yrs — ${sooner.toFixed(1)} yrs sooner`
+    : `${p.contractedAmortYears}-yr amortization`;
+
+  el.textContent = `${per} · ${payoff}`;
+}
+
 function updateDownPaymentSub(inputs) {
   const el = document.getElementById("downPayment-sub");
   if (!el) return;
@@ -350,6 +379,10 @@ function renderMonthlyCard(result) {
   const principalNote = b.principal > 0
     ? `<p class="note">About ${formatMoney(b.principal)}/mo of the owning cost is principal — forced savings that builds your equity, not money spent.</p>`
     : "";
+  const pp = result.paymentPlan;
+  const freqNote = pp.frequency !== "monthly"
+    ? `<p class="note">P&amp;I is the monthly equivalent of your ${PAYMENT_FREQUENCIES[pp.frequency].label.toLowerCase()} payments (${formatMoney(pp.perPayment)} every ${PAYMENT_FREQUENCIES[pp.frequency].every}).</p>`
+    : "";
 
   body.innerHTML = `
     <div class="row"><span>Mortgage payment (P&amp;I)</span><span>${formatMoney(b.pi)}</span></div>
@@ -361,6 +394,7 @@ function renderMonthlyCard(result) {
     <div class="row"><span>Maintenance</span><span>${formatMoney(b.maintenance)}</span></div>
     <div class="row"><span>Condo/strata</span><span>${formatMoney(b.condo)}</span></div>
     <div class="row row-total"><span>Total monthly housing cost</span><span>${formatMoney(housing)}</span></div>
+    ${freqNote}
 
     <div class="compare-block">
       <p class="subhead">Owning vs. renting — per month</p>

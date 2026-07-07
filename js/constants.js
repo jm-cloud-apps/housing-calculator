@@ -19,6 +19,7 @@ export const DEFAULTS = {
   marginalTaxRate: 30, // % — only used in 'taxable' tax mode
   taxMode: "tfsa", // 'tfsa' | 'taxable'
   isFirstTimeBuyer: true,
+  paymentFrequency: "monthly", // key into PAYMENT_FREQUENCIES (finance.js)
 };
 
 // Misc monthly living expenses — informational only, kept separate from the

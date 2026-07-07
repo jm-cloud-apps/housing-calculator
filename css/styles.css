@@ -175,6 +175,21 @@ main {
   gap: 20px;
 }
 
+/* Payment-frequency selector sits below the primary sliders, set off by a hairline. */
+#primary-inputs .freq-field {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+#primary-inputs .freq-field select {
+  min-width: 180px;
+}
+
+.freq-detail {
+  margin: 8px 0 0;
+}
+
 .field-label-row {
   display: flex;
   flex-wrap: wrap;

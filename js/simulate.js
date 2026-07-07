@@ -2,9 +2,7 @@ import {
   cmhcInsurance,
   bcPropertyTransferTax,
   firstTimeBuyerPttExemption,
-  monthlyPayment,
-  remainingBalance,
-  effectiveMonthlyRate,
+  mortgagePlan,
   gdsRatio,
   applyCapitalGainsTax,
 } from "./finance.js";
@@ -53,11 +51,13 @@ export function runSimulation(inputs) {
     marginalTaxRate,
     taxMode,
     isFirstTimeBuyer,
+    paymentFrequency,
   } = inputs;
 
   const cmhc = cmhcInsurance(homePrice, downPayment);
   const loanPrincipal = cmhc.loanAmount + (cmhc.status === "insured" ? cmhc.premium : 0);
-  const pmt = monthlyPayment(loanPrincipal, mortgageRate, amortizationYears);
+  const plan = mortgagePlan(loanPrincipal, mortgageRate, amortizationYears, paymentFrequency);
+  const planFirstYear = plan.yearly[0] || { principal: 0, interest: 0 };
 
   const rawPtt = bcPropertyTransferTax(homePrice);
   const pttExemption = isFirstTimeBuyer ? firstTimeBuyerPttExemption(homePrice, rawPtt) : 0;
@@ -66,14 +66,12 @@ export function runSimulation(inputs) {
   // What the buyer spends upfront — also the renter's opportunity-cost starting capital.
   const cashNeededToClose = downPayment + closingCosts;
 
-  const firstMonthInterest = loanPrincipal * effectiveMonthlyRate(mortgageRate);
-  const firstMonthPrincipal = pmt - firstMonthInterest;
-
-  // Day-1 monthly breakdown, used for both the GDS check and the UI's cost card.
+  // Day-1 monthly breakdown, used for the UI's cost card. P&I is the monthly-equivalent
+  // cash cost of the chosen frequency (year-1 average), so it's comparable to rent.
   const monthlyBreakdown = {
-    pi: pmt,
-    principal: firstMonthPrincipal,
-    interest: firstMonthInterest,
+    pi: (planFirstYear.principal + planFirstYear.interest) / 12,
+    principal: planFirstYear.principal / 12,
+    interest: planFirstYear.interest / 12,
     tax: propertyTaxRate,
     heat: heatingMonthly,
     insurance: homeInsuranceMonthly,
@@ -88,8 +86,9 @@ export function runSimulation(inputs) {
     monthlyBreakdown.maintenance +
     monthlyBreakdown.condo;
 
+  // Lenders qualify GDS on the standard monthly payment, not the accelerated cash cost.
   const gdsResult = gdsRatio({
-    monthlyPI: monthlyBreakdown.pi,
+    monthlyPI: plan.baseMonthly,
     monthlyPropertyTax: monthlyBreakdown.tax,
     monthlyHeating: monthlyBreakdown.heat,
     monthlyCondoFee: monthlyBreakdown.condo,
@@ -110,10 +109,11 @@ export function runSimulation(inputs) {
 
   for (let year = 1; year <= horizonYears; year++) {
     const homeValue = homePrice * Math.pow(1 + homeAppreciation / 100, year);
-    const monthsElapsed = Math.min(year * 12, amortizationYears * 12);
-    const balance = remainingBalance(loanPrincipal, mortgageRate, amortizationYears, monthsElapsed);
+    // Beyond the payoff year the plan has no entry: balance 0, no P&I owed.
+    const planYear = plan.yearly[year - 1];
+    const balance = planYear ? planYear.endBalance : 0;
 
-    const annualPI = year <= amortizationYears ? pmt * 12 : 0;
+    const annualPI = planYear ? planYear.principal + planYear.interest : 0;
     const annualTax = propertyTaxRate * 12;
     const annualHeat = heatingMonthly * 12;
     const annualInsurance = homeInsuranceMonthly * 12;
@@ -144,28 +144,7 @@ export function runSimulation(inputs) {
     });
   }
 
-  const amortizationSchedule = [];
-  let scheduleBalance = loanPrincipal;
-  for (let year = 1; year <= amortizationYears; year++) {
-    let annualInterest = 0;
-    let annualPrincipal = 0;
-    for (let month = 0; month < 12; month++) {
-      const interest = scheduleBalance * effectiveMonthlyRate(mortgageRate);
-      const principal = Math.min(pmt - interest, scheduleBalance);
-      annualInterest += interest;
-      annualPrincipal += principal;
-      scheduleBalance = Math.max(0, scheduleBalance - principal);
-      if (scheduleBalance <= 0) break;
-    }
-    amortizationSchedule.push({
-      year,
-      startBalance: scheduleBalance + annualPrincipal,
-      principal: annualPrincipal,
-      interest: annualInterest,
-      endBalance: scheduleBalance,
-    });
-    if (scheduleBalance <= 0) break;
-  }
+  const amortizationSchedule = plan.yearly;
 
   const finalOwner = ownerNetWorth[ownerNetWorth.length - 1];
   const finalRenter = renterNetWorth[renterNetWorth.length - 1];
@@ -190,6 +169,16 @@ export function runSimulation(inputs) {
     downPayment,
     legalInspectionCost,
     monthlyBreakdown,
+    paymentPlan: {
+      frequency: plan.frequency,
+      perYear: plan.perYear,
+      perPayment: plan.perPayment,
+      baseMonthly: plan.baseMonthly,
+      monthlyEquivalent: plan.monthlyEquivalent,
+      payoffYears: plan.payoffYears,
+      totalInterest: plan.totalInterest,
+      contractedAmortYears: amortizationYears,
+    },
     gds: gdsResult ? gdsResult.ratio : null,
     gdsMonthlyCost: gdsResult ? gdsResult.monthlyCost : null,
     grossIncome,

@@ -8,10 +8,29 @@ import {
 } from "./constants.js";
 
 // Canadian mortgages compound semi-annually, not monthly — this is NOT the US formula.
-export function effectiveMonthlyRate(annualRatePct) {
+// Effective rate per payment period for `perYear` payments/year (12=monthly, 24=semi-monthly,
+// 26=biweekly, 52=weekly).
+export function effectivePeriodicRate(annualRatePct, perYear) {
   const j = annualRatePct / 100;
-  return Math.pow(1 + j / 2, 2 / 12) - 1;
+  return Math.pow(1 + j / 2, 2 / perYear) - 1;
 }
+
+export function effectiveMonthlyRate(annualRatePct) {
+  return effectivePeriodicRate(annualRatePct, 12);
+}
+
+// Payment frequencies. `factor` is the per-payment amount as a multiple of the standard
+// monthly payment: non-accelerated splits the monthly total across more payments (same
+// annual total), while accelerated pays half/quarter the monthly amount every period, which
+// works out to ~13 monthly payments a year and shortens the amortization.
+export const PAYMENT_FREQUENCIES = {
+  monthly: { label: "Monthly", perYear: 12, factor: 1, every: "month", accelerated: false },
+  semi_monthly: { label: "Semi-monthly", perYear: 24, factor: 1 / 2, every: "½ month", accelerated: false },
+  biweekly: { label: "Biweekly", perYear: 26, factor: 12 / 26, every: "2 weeks", accelerated: false },
+  accelerated_biweekly: { label: "Accelerated biweekly", perYear: 26, factor: 1 / 2, every: "2 weeks", accelerated: true },
+  weekly: { label: "Weekly", perYear: 52, factor: 12 / 52, every: "week", accelerated: false },
+  accelerated_weekly: { label: "Accelerated weekly", perYear: 52, factor: 1 / 4, every: "week", accelerated: true },
+};
 
 // Standard amortization payment formula, fed the Canadian effective monthly rate above.
 export function monthlyPayment(principal, annualRatePct, amortYears) {
@@ -30,6 +49,53 @@ export function remainingBalance(principal, annualRatePct, amortYears, monthsEla
   const pmt = monthlyPayment(principal, annualRatePct, amortYears);
   if (i === 0) return Math.max(0, principal - pmt * monthsElapsed);
   return principal * Math.pow(1 + i, monthsElapsed) - pmt * ((Math.pow(1 + i, monthsElapsed) - 1) / i);
+}
+
+// Amortizes a loan at a given payment frequency and returns the per-payment amount, its
+// monthly-equivalent cash cost, the actual payoff time (shorter than the contracted
+// amortization for accelerated frequencies), total interest, and a per-year schedule.
+// `baseMonthly` is the standard monthly payment lenders qualify you on.
+export function mortgagePlan(principal, annualRatePct, amortYears, frequencyKey) {
+  const freq = PAYMENT_FREQUENCIES[frequencyKey] ? frequencyKey : "monthly";
+  const { perYear, factor } = PAYMENT_FREQUENCIES[freq];
+  const baseMonthly = monthlyPayment(principal, annualRatePct, amortYears);
+  const perPayment = baseMonthly * factor;
+  const i = effectivePeriodicRate(annualRatePct, perYear);
+
+  const yearly = [];
+  let balance = principal;
+  let totalInterest = 0;
+  let payoffPeriods = 0;
+
+  for (let year = 1; year <= amortYears && balance > 0.005; year++) {
+    const startBalance = balance;
+    let yearPrincipal = 0;
+    let yearInterest = 0;
+    for (let p = 0; p < perYear && balance > 0.005; p++) {
+      const interest = balance * i;
+      let principalPaid = perPayment - interest;
+      if (principalPaid <= 0) break; // payment doesn't cover interest (edge case) — stop
+      if (principalPaid > balance) principalPaid = balance;
+      balance = Math.max(0, balance - principalPaid);
+      yearPrincipal += principalPaid;
+      yearInterest += interest;
+      totalInterest += interest;
+      payoffPeriods++;
+    }
+    yearly.push({ year, startBalance, principal: yearPrincipal, interest: yearInterest, endBalance: balance });
+    if (yearPrincipal === 0) break; // non-amortizing — avoid an infinite outer loop
+  }
+
+  return {
+    frequency: freq,
+    perYear,
+    perPayment,
+    baseMonthly,
+    monthlyEquivalent: (perPayment * perYear) / 12,
+    payoffYears: perYear > 0 ? payoffPeriods / perYear : amortYears,
+    totalInterest,
+    yearly,
+  };
 }
 
 // Minimum down payment required for an insurable mortgage at this price (tiered rule):
