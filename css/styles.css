@@ -627,6 +627,19 @@ input[type="text"]::-webkit-inner-spin-button {
   color: var(--muted);
 }
 
+/* Running expenses total shown in the collapsed section header, for awareness. */
+#misc > summary {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+#misc > summary .summary-total {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .misc-total {
   border-top: 1px solid var(--line);
   margin-top: 4px;

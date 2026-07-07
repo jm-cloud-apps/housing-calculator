@@ -30,6 +30,7 @@ export const MISC_DEFAULTS = {
   carInsuranceMonthly: 200,
   carPaymentMonthly: 200,
   groceriesMonthly: 500,
+  otherExpensesMonthly: 0,
 };
 
 export const MISC_RANGES = {
@@ -38,6 +39,7 @@ export const MISC_RANGES = {
   carInsuranceMonthly: { min: 0, max: 1_000, step: 10 },
   carPaymentMonthly: { min: 0, max: 2_000, step: 10 },
   groceriesMonthly: { min: 0, max: 3_000, step: 25 },
+  otherExpensesMonthly: { min: 0, max: 5_000, step: 25 },
 };
 
 export const MISC_FIELDS = [
@@ -46,6 +48,7 @@ export const MISC_FIELDS = [
   { key: "carInsuranceMonthly", label: "Car insurance", prefix: "$", suffix: "/mo" },
   { key: "carPaymentMonthly", label: "Car payment", prefix: "$", suffix: "/mo" },
   { key: "groceriesMonthly", label: "Groceries", prefix: "$", suffix: "/mo" },
+  { key: "otherExpensesMonthly", label: "Other expenses", prefix: "$", suffix: "/mo" },
 ];
 
 // min/max/step for each slider+number field.

@@ -349,9 +349,11 @@ function renderGdsCard(result) {
 function renderMiscTotal(result) {
   const other = MISC_FIELDS.reduce((sum, { key }) => sum + fields[key].get(), 0);
   const housing = result?.monthlyBreakdown?.total ?? 0;
+  const summary = document.getElementById("misc-summary-total");
+  if (summary) summary.textContent = `${formatMoney(other)}/mo`;
   document.getElementById("misc-total").innerHTML = `
     <div class="row"><span>Housing (owning)</span><span>${formatMoney(housing)}/mo</span></div>
-    <div class="row"><span>Other expenses</span><span>${formatMoney(other)}/mo</span></div>
+    <div class="row"><span>Non-housing expenses</span><span>${formatMoney(other)}/mo</span></div>
     <div class="row row-total"><span>Total monthly outlay</span><span>${formatMoney(housing + other)}/mo</span></div>
   `;
 }
