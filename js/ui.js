@@ -53,7 +53,7 @@ export function initUI() {
 }
 
 function renderAndBind(container, meta, defaultsSource = DEFAULTS, rangesSource = RANGES) {
-  const { key, label, prefix, suffix, showPercentOf } = meta;
+  const { key, label, prefix, suffix, showPercentOf, hint } = meta;
   const range = rangesSource[key];
   const def = defaultsSource[key];
 
@@ -65,6 +65,7 @@ function renderAndBind(container, meta, defaultsSource = DEFAULTS, rangesSource 
       <label for="${key}-slider">${label}</label>
       <span class="field-sub" id="${key}-sub"></span>
     </div>
+    ${hint ? `<p class="field-hint">${hint}</p>` : ""}
     <div class="field-controls">
       <input type="range" id="${key}-slider" min="${range.min}" max="${range.max}" step="${range.step}" value="${def}" />
       <div class="number-wrap">
@@ -253,11 +254,11 @@ function renderCashCard(result) {
   let pttRow;
   if (result.pttExemption > 0) {
     pttRow = `
-      <div class="row"><span>BC PTT</span><span><s>${formatMoney(result.rawPtt)}</s> ${formatMoney(result.ptt)}</span></div>
-      <p class="note">First-time buyer exemption saves ${formatMoney(result.pttExemption)}.</p>
+      <div class="row"><span>Land transfer tax (BC PTT)</span><span><s>${formatMoney(result.rawPtt)}</s> ${formatMoney(result.ptt)}</span></div>
+      <p class="note">First-time buyer rebate saves ${formatMoney(result.pttExemption)} on the land transfer tax.</p>
     `;
   } else {
-    pttRow = `<div class="row"><span>BC PTT</span><span>${formatMoney(result.ptt)}</span></div>`;
+    pttRow = `<div class="row"><span>Land transfer tax (BC PTT)</span><span>${formatMoney(result.ptt)}</span></div>`;
   }
   const cmhcNote = result.cmhc?.premium > 0
     ? `<p class="note">CMHC insurance is financed into the mortgage balance, so it increases your loan size and monthly payment even though it is not a separate upfront cash cost.</p>`
@@ -288,7 +289,7 @@ function renderMonthlyCard(result) {
     <div class="row row-indent"><span>• Principal (builds equity)</span><span>${formatMoney(b.principal)}</span></div>
     <div class="row row-indent"><span>• Interest</span><span>${formatMoney(b.interest)}</span></div>
     <div class="row"><span>Property tax</span><span>${formatMoney(b.tax)}</span></div>
-    <div class="row"><span>Heating</span><span>${formatMoney(b.heat)}</span></div>
+    <div class="row"><span>Hydro / Gas</span><span>${formatMoney(b.heat)}</span></div>
     <div class="row"><span>Home insurance</span><span>${formatMoney(b.insurance)}</span></div>
     <div class="row"><span>Maintenance</span><span>${formatMoney(b.maintenance)}</span></div>
     <div class="row"><span>Condo/strata</span><span>${formatMoney(b.condo)}</span></div>
@@ -342,18 +343,16 @@ function renderGdsCard(result) {
     <div class="row"><span>Housing counted (GDS)</span><span>${formatMoney(gdsMonthly)}/mo</span></div>
     <div class="row"><span>Gross income</span><span>${formatMoney(grossMonthly)}/mo</span></div>
     ${headroomRow}
-    <p class="note">GDS counts mortgage P&amp;I + property tax + heating + 50% of condo fees (not insurance or maintenance). Above ${formatPercent(capPct, 0)}, many lenders won't approve without a bigger down payment or co-signer.</p>
+    <p class="note">GDS counts mortgage P&amp;I + property tax + hydro/gas + 50% of condo fees (not insurance or maintenance). Above ${formatPercent(capPct, 0)}, many lenders won't approve without a bigger down payment or co-signer.</p>
   `;
 }
 
 function renderMiscTotal(result) {
   const other = MISC_FIELDS.reduce((sum, { key }) => sum + fields[key].get(), 0);
   const housing = result?.monthlyBreakdown?.total ?? 0;
-  const summary = document.getElementById("misc-summary-total");
-  if (summary) summary.textContent = `${formatMoney(other)}/mo`;
   document.getElementById("misc-total").innerHTML = `
-    <div class="row"><span>Housing (owning)</span><span>${formatMoney(housing)}/mo</span></div>
-    <div class="row"><span>Non-housing expenses</span><span>${formatMoney(other)}/mo</span></div>
+    <div class="row"><span>Ownership costs</span><span>${formatMoney(housing)}/mo</span></div>
+    <div class="row"><span>Other monthly expenses</span><span>${formatMoney(other)}/mo</span></div>
     <div class="row row-total"><span>Total monthly outlay</span><span>${formatMoney(housing + other)}/mo</span></div>
   `;
 }

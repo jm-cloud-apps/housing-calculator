@@ -49,7 +49,6 @@ export function runSimulation(inputs) {
     maintenanceRate,
     heatingMonthly,
     condoFeeMonthly,
-    sellingCostRate,
     legalInspectionCost,
     marginalTaxRate,
     taxMode,
@@ -102,7 +101,7 @@ export function runSimulation(inputs) {
   const firstYearInvestmentContribution = Math.max(0, firstYearOwnerCost - firstYearRent);
 
   const years = [0];
-  const ownerNetWorth = [homePrice - (homePrice * sellingCostRate) / 100 - loanPrincipal];
+  const ownerNetWorth = [homePrice - loanPrincipal];
   const yearlyCashFlow = [];
 
   let renterPortfolio = cashNeededToClose;
@@ -131,7 +130,7 @@ export function runSimulation(inputs) {
     totalContributions += contribution;
 
     years.push(year);
-    ownerNetWorth.push(homeValue - (homeValue * sellingCostRate) / 100 - balance);
+    ownerNetWorth.push(homeValue - balance);
     // Tax adjustment applied every year (not just at the horizon) so both curves stay
     // consistent "sell/liquidate today" net-worth lines throughout the chart.
     renterNetWorth.push(applyCapitalGainsTax(renterPortfolio, totalContributions, taxMode, marginalTaxRate));

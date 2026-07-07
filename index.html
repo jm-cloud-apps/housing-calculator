@@ -94,8 +94,8 @@
         </div>
         <div class="breakdown-card" id="card-cash">
           <h3>Cash Needed to Close</h3>
-          <p class="card-explainer">Everything you pay upfront: down payment, BC Property Transfer Tax, and
-            legal/inspection fees.</p>
+          <p class="card-explainer">Everything you pay upfront: down payment, land transfer tax (BC Property
+            Transfer Tax) less any first-time buyer rebate, and legal/inspection fees.</p>
           <div class="breakdown-body"></div>
         </div>
         <div class="breakdown-card" id="card-monthly">
@@ -113,13 +113,16 @@
       </div>
     </section>
 
-    <details id="misc" class="card">
-      <summary>💳 Other monthly expenses<span class="summary-total" id="misc-summary-total"></span></summary>
-      <p class="card-explainer">Optional — for your own budget awareness. Kept separate from the housing
-        comparison above; these don't affect the Buy vs. Rent numbers.</p>
-      <div id="misc-fields" class="fields"></div>
+    <section id="misc" class="card">
+      <h2 class="misc-heading">💳 Monthly budget</h2>
       <div class="misc-total" id="misc-total"></div>
-    </details>
+      <details id="misc-details">
+        <summary>Show / edit monthly expenses</summary>
+        <p class="card-explainer">Optional — for your own budget awareness. Kept separate from the housing
+          comparison above; these don't affect the Buy vs. Rent numbers.</p>
+        <div id="misc-fields" class="fields"></div>
+      </details>
+    </section>
   </main>
 
   <footer class="app-footer">

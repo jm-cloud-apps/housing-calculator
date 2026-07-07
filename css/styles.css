@@ -104,6 +104,13 @@ main {
   white-space: nowrap;
 }
 
+.field-hint {
+  margin: -2px 0 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .field-controls {
   display: flex;
   align-items: center;
@@ -412,7 +419,8 @@ input[type="text"]::-webkit-inner-spin-button {
 }
 
 /* Prominent, unmistakable subtotal/total line inside a breakdown card. */
-.breakdown-body .row-total {
+.breakdown-body .row-total,
+.misc-total .row-total {
   font-weight: 800;
   font-size: 1rem;
   margin-top: 8px;
@@ -627,29 +635,28 @@ input[type="text"]::-webkit-inner-spin-button {
   color: var(--muted);
 }
 
-/* Running expenses total shown in the collapsed section header, for awareness. */
-#misc > summary {
-  justify-content: flex-start;
-  gap: 8px;
-}
-
-#misc > summary .summary-total {
-  margin-left: auto;
-  color: var(--muted);
-  font-weight: 600;
-  font-size: 0.9rem;
+/* Monthly budget card: always-visible breakdown (ownership + expenses), with the
+   individual expense inputs tucked into a collapsible below it. */
+.misc-heading {
+  margin: 0 0 12px;
+  font-size: 1rem;
 }
 
 .misc-total {
-  border-top: 1px solid var(--line);
-  margin-top: 4px;
-  padding-top: 12px;
   font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 .misc-total .row {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
+}
+
+#misc-details {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
 }
 
 /* ---- Advanced / misc (details/summary) ---- */

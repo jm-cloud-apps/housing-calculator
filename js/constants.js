@@ -15,8 +15,7 @@ export const DEFAULTS = {
   maintenanceRate: 450, // fixed monthly maintenance cost (excluded from GDS)
   heatingMonthly: 50,
   condoFeeMonthly: 400,
-  sellingCostRate: 4, // % of future home value, paid on exit
-  legalInspectionCost: 1_500, // flat, one-time closing cost
+  legalInspectionCost: 2_000, // flat, one-time closing cost (legal + home inspection)
   marginalTaxRate: 30, // % — only used in 'taxable' tax mode
   taxMode: "tfsa", // 'tfsa' | 'taxable'
   isFirstTimeBuyer: true,
@@ -68,7 +67,6 @@ export const RANGES = {
   maintenanceRate: { min: 0, max: 5_000, step: 10 },
   heatingMonthly: { min: 0, max: 1_000, step: 10 },
   condoFeeMonthly: { min: 0, max: 2_000, step: 25 },
-  sellingCostRate: { min: 0, max: 10, step: 0.1 },
   legalInspectionCost: { min: 0, max: 10_000, step: 100 },
   marginalTaxRate: { min: 0, max: 55, step: 1 },
 };
@@ -90,10 +88,10 @@ export const ADVANCED_FIELDS = [
   { key: "homeAppreciation", label: "Home appreciation", suffix: "%/yr" },
   { key: "propertyTaxRate", label: "Property tax", prefix: "$", suffix: "/mo" },
   { key: "homeInsuranceMonthly", label: "Home insurance", prefix: "$", suffix: "/mo" },
-  { key: "maintenanceRate", label: "Maintenance", prefix: "$", suffix: "/mo" },
-  { key: "heatingMonthly", label: "Heating", prefix: "$", suffix: "/mo" },
+  { key: "maintenanceRate", label: "Maintenance & repairs", prefix: "$", suffix: "/mo",
+    hint: "Upkeep you pay yourself — roof, appliances, plumbing. Condo owners: most building repairs are already in the strata fee below, so keep this low." },
+  { key: "heatingMonthly", label: "Hydro / Gas", prefix: "$", suffix: "/mo" },
   { key: "condoFeeMonthly", label: "Condo/strata fee", prefix: "$", suffix: "/mo" },
-  { key: "sellingCostRate", label: "Selling costs on exit", suffix: "%" },
   { key: "legalInspectionCost", label: "Legal + inspection (one-time)", prefix: "$" },
   { key: "marginalTaxRate", label: "Marginal tax rate (taxable mode)", suffix: "%" },
 ];
